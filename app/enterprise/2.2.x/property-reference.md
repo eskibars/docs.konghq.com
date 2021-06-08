@@ -3220,7 +3220,7 @@ https://github.com/kikito/sandbox.lua/blob/master/sandbox.lua
 To customize the sandbox environment, use the `untrusted_lua_sandbox_requires`
 and `untrusted_lua_sandbox_environment` parameters below.
 
-**Default:** `sandbox`
+**Default:** `on`
 
 ---
 
