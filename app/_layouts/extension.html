@@ -6,240 +6,70 @@ breadcrumbs:
   Hub: '/hub'
 
 ---
-
+{% unless page.type == "concept" %}
 {% if page.type == "plugin" %}
-
-{% capture config_required_fields %}{%
-  for field in page.params.config %}{%
-  if field.value_in_examples != nil %}{%
-  if field.value_in_examples.first %}{%
-  for value in field.value_in_examples %} \
-    --data{% if field.urlencode_in_examples %}-urlencode{% endif %} "config.{{ field.name }}={{ value }}"{%
-  endfor %}{%
-  else %} \
-    --data{% if field.urlencode_in_examples %}-urlencode{% endif %} "config.{{ field.name }}={{ field.value_in_examples }}"{%
-  endif %}{%
-  elsif field.required == true %} \
-    --data{% if field.urlencode_in_examples %}-urlencode{% endif %} "config.{{ field.name }}={{ field.default | markdownify | strip_html | strip }}"{%
-  endif %}{% endfor
-%}{% endcapture %}
-
-{% capture config_required_fields_yaml
-  %}config: {%
-  for field in page.params.config %}{%
-  if field.value_in_examples != nil %}{%
-    if field.value_in_examples.first %}
-    {{ field.name }}:{%
-    for value in field.value_in_examples %}
-    - {{ value }}{%
-    endfor %}{%
-    else %}
-    {{ field.name }}: {{ field.value_in_examples }}{%
-    endif %}{%
-  elsif field.required == true %}
-    {{ field.name }}: {{ field.default | markdownify | strip_html | strip }}{%
-  endif %}{% endfor
-%}{% endcapture %}
-
-{% if page.params.service_id %}
-{% capture plugin_config_for_service_with_db %}
-
-Configure this plugin on a [Service](/latest/admin-api/#service-object) by
-making the following request:
-
-```bash
-$ curl -X POST http://kong:8001/services/{service}/plugins \
-    --data "name={{page.params.name}}" {{ config_required_fields }}
-```
-{% endcapture %}
-
-{% capture plugin_config_for_service %}
-### Enabling the plugin on a Service
-
-{% if page.enterprise or page.params.dbless_compatible == false or page.params.dbless_compatible == nil %}
-
-{{ plugin_config_for_service_with_db }}
-
-{% elsif page.params.dbless_compatible == true or page.params.dbless_compatible == "partially" %}
-
-{% navtabs %}
-{% navtab With a database %}
-
-{{ plugin_config_for_service_with_db }}
-
-{% endnavtab %}
-{% navtab Without a database %}
-
-Configure this plugin on a [Service](/latest/admin-api/#service-object) by
-adding this section to your declarative configuration file:
-
-``` yaml
-plugins:
-- name: {{page.params.name}}
-  service: {service}
-  {{ config_required_fields_yaml }}
-```
-{% endnavtab %}
-{% endnavtabs %}
-
-{% endif %}
-
-`{service}` is the `id` or `name` of the Service that this plugin configuration will target.
-
-{% endcapture %}
-{% endif %}
-
-{% if page.params.route_id %}
-
-{% capture plugin_config_for_route_with_db %}
-
-Configure this plugin on a [Route](/latest/admin-api/#Route-object) with:
-
-```bash
-$ curl -X POST http://kong:8001/routes/{route}/plugins \
-    --data "name={{page.params.name}}" {{ config_required_fields }}
-```
-{% endcapture %}
-
-{% capture plugin_config_for_route %}
-### Enabling the plugin on a Route
-
-{% if page.enterprise or page.params.dbless_compatible == false or page.params.dbless_compatible == nil %}
-
-{{ plugin_config_for_route_with_db }}
-
-{% elsif page.params.dbless_compatible == true or page.params.dbless_compatible == "partially" %}
-
-{% navtabs %}
-{% navtab With a database %}
-
-{{ plugin_config_for_route_with_db }}
-
-{% endnavtab %}
-{% navtab Without a database %}
-
-Configure this plugin on a [Route](/latest/admin-api/#route-object) by
-adding this section to your declarative configuration file:
-
-``` yaml
-plugins:
-- name: {{page.params.name}}
-  route: {route}
-  {{ config_required_fields_yaml }}
-```
-{% endnavtab %}
-{% endnavtabs %}
-{% endif %}
-
-`{route}` is the `id` or `name` of the Route that this plugin configuration will target.
-
-{% endcapture %}
-{% endif %}
-
-{% if page.params.consumer_id %}
-{% capture plugin_config_for_consumer_with_db %}
-
-Configure this plugin on a [Consumer](/latest/admin-api/#Consumer-object) with:
-
-```bash
-$ curl -X POST http://kong:8001/consumers/{consumer}/plugins \
-    --data "name={{page.params.name}}" {{ config_required_fields }}
-```
-{% endcapture %}
-
-{% capture plugin_config_for_consumer %}
-### Enabling the plugin on a Consumer
-
-{% if page.enterprise or page.params.dbless_compatible == false or page.params.dbless_compatible == nil %}
-
-{{ plugin_config_for_consumer_with_db }}
-
-{% elsif page.params.dbless_compatible == true or page.params.dbless_compatible == "partially" %}
-{% navtabs %}
-
-{% navtab With a database %}
-
-{{ plugin_config_for_consumer_with_db }}
-
-{% endnavtab %}
-{% navtab Without a database %}
-
-Configure this plugin on a [Consumer](/latest/admin-api/#consumer-object) by
-adding this section to your declarative configuration file:
-
-``` yaml
-plugins:
-- name: {{page.params.name}}
-  consumer: {consumer}
-  {{ config_required_fields_yaml }}
-```
-{% endnavtab %}
-{% endnavtabs %}
-{% endif %}
-
-`{consumer}` is the `id` or `username` of the Consumer that this plugin configuration will target.
-
-{% if page.params.service_id or page.params_route_id or page.params.api_id %}
-You can combine `consumer.id` and {%
-  if page.params.service_id %}`service.id`{%
-  elsif page.params.route_id %}`route.id`{%
-  elsif page.params.api_id %}`api_id`{%
-  endif %} in the same request, to further narrow the scope of the plugin.
-{% endif %}
-
-{% endcapture %}
-{% endif %}
-
-{% if page.params.api_id %}
-{% capture plugin_config_for_api %}
-### Enabling the plugin on an API
-
-If you are using an older version of Kong with the legacy [API
-entity](/0.13.x/admin-api/#api-object) (**deprecated** in favor of Services
-since <a href="https://github.com/Kong/kong/blob/master/CHANGELOG.md#0130---20180322">
-CE 0.13.0</a> and
-<a href="https://docs.konghq.com/enterprise/changelog/#0-32">EE 0.32</a>.), you
-can configure this plugin on top of such an API by making the following request:
-
-```bash
-$ curl -X POST http://kong:8001/apis/{api}/plugins \
-    --data "name={{page.params.name}}" {{ config_required_fields }}
-```
-
-* `api`: either id or name of the API that this plugin configuration will
-  target.
-{% endcapture %}
-{% endif %}
 
 {% capture params_table %}
 <table>
   <thead>
-    <tr><th>Form Parameter</th><th>Description</th></tr>
+    <tr>
+      <th style="width: 25%;">Form Parameter</th>
+      <th style="width: 75%;">Description </th>
+    </tr>
   </thead>
   <tbody>
-    <tr><td><code>name</code></td><td>The name of the plugin to use, in this case <code>{{ page.params.name }}</code></td></tr>
+    <tr>
+      <td><code>name</code>
+        <br><br><strong>Type: </strong>string</td>
+      <td>The name of the plugin to use, in this case <code>{{ page.params.name }}</code>.</td>
+    </tr>
 
     {% if page.params.service_id %}
-      <tr><td><code>service.id</code></td><td>The ID of the Service the plugin targets.</td></tr>
+      <tr>
+        <td><code>service.id</code>
+          <br><br><strong>Type: </strong>string</td>
+        <td>The ID of the Service the plugin targets.</td>
+      </tr>
     {% endif %}
     {% if page.params.route_id %}
-      <tr><td><code>route.id</code></td><td>The ID of the Route the plugin targets.</td></tr>
+      <tr>
+        <td><code>route.id</code>
+          <br><br><strong>Type: </strong>string</td>
+        <td>The ID of the Route the plugin targets.</td>
+      </tr>
     {% endif %}
     {% if page.params.consumer_id %}
-      <tr><td><code>consumer.id</code></td><td>The ID of the Consumer the plugin targets.</td></tr>
+      <tr>
+        <td><code>consumer.id</code>
+          <br><br><strong>Type: </strong>string</td>
+        <td>The ID of the Consumer the plugin targets.</td>
+      </tr>
     {% endif %}
-      <tr><td><code>enabled</code><br><br><strong>default value: </strong><code>true</code></td><td>Whether this plugin will be applied.</td></tr>
+      <tr>
+        <td><code>enabled</code>
+          <br><br><strong>Type: </strong>boolean
+          <br><br><strong>Default value: </strong><code>true</code></td>
+        <td>Whether this plugin will be applied.</td>
+      </tr>
     {% if page.params.api_id %}
-    <tr><td><code>api_id</code></td><td>The ID of the API the plugin targets. <br><br><strong>Note:</strong> The <a href="/0.13.x/admin-api/#api-object">API Entity</a> is deprecated in favor of Services since <a href="https://github.com/Kong/kong/blob/master/CHANGELOG.md#0130---20180322">CE 0.13.0</a> and <a href="https://docs.konghq.com/enterprise/changelog/#0-32">EE 0.32</a>.</td></tr>
+    <tr>
+      <td><code>api_id</code>
+        <br><br><strong>Type: </strong>string</td>
+      <td>The ID of the API the plugin targets.
+        <br><br><strong>Note:</strong> The <a href="/0.13.x/admin-api/#api-object">API Entity</a> is deprecated in favor of Services since <a href="https://github.com/Kong/kong/blob/master/CHANGELOG.md#0130---20180322">CE 0.13.0</a> and <a href="https://docs.konghq.com/enterprise/changelog/#0-32">EE 0.32</a>.</td>
+      </tr>
     {% endif %}
     {% for field in page.params.config %}
       <tr>
         <td><code>config.{{ field.name }}</code>
+          {% if field.required == true %}<br><em>required</em>{% endif %}
           {% if field.required == false %}<br><em>optional</em>{% endif %}
           {% if field.required == "semi" %}<br><em>semi-optional</em>{% endif %}
-          {% if field.default != nil %}<br><br><strong>default value: </strong>{{ field.default | markdownify }}{% endif %}
+          {% if field.datatype != nil %}<br><br><strong>Type: </strong>{{ field.datatype | markdownify | strip_html }}{% endif %}
+          {% if field.default != nil %}<br><br><strong>Default value: </strong><code>{{ field.default | markdownify | strip_html }}</code>{% endif %}
         </td>
-        <td>{{ field.description | markdownify }}</td>
+        <td>
+          <br>{{ field.description | markdownify }}</td>
       </tr>
     {% endfor %}
   </tbody>
@@ -280,12 +110,15 @@ $ curl -X POST http://kong:8001/apis/{api}/plugins \
     {% assign extn_release = extn_version['release'] %}
   {% endunless %}
 {% endif %}
+{% endunless %}
 
 <!-- BEGIN PAGE OUTPUT -->
 
 <div class="page page-extension-profile">
   {% if page.header_icon or page.header_title %}
     {% include header.html type=extn_type name=page.header_title %}
+  {% elsif page.type == concept %}
+      {% include header.html name=page.title %}
   {% else %}
     {% include header.html img=extn_icon name=page.name %}
   {% endif %}
@@ -318,49 +151,35 @@ $ curl -X POST http://kong:8001/apis/{api}/plugins \
     {% endif %}
 
     {% capture full_content %}
+    {% if page.type == "plugin" or page.type == "integration" %}
       {% unless path_array contains "kong-inc" %}
-        <div class="alert alert-info" role="alert">
+        <div class="alert alert-info blue" role="alert">
           Community {{ extn_type | capitalize }}: This plugin is <b>developed, tested, and maintained</b> by a third-party contributor.
         </div>
       {% endunless %}
-
+    {% endif %}
       {% if page.enterprise %}
-        <div class="alert alert-warning">
-          <strong>Kong Enterprise only</strong>: This plugin is only available with a <a href="https://konghq.com/kong-enterprise-edition">Kong Enterprise subscription</a>.
-        </div>
-
-        Please inquire about Kong Enterprise by <a href="https://konghq.com/request-demo">contacting us</a>, or start a <a href="https://konghq.com/free-trial/">free trial</a> today.
-        <hr>
+        <div class="alert alert-ee warning">
+        <strong>{{site.konnect_product_name}} only</strong>: This plugin is only available with a <a href="https://konghq.com/kong-konnect">{{site.konnect_product_name}} subscription</a>. Please inquire about {{site.konnect_product_name}} by <a href="https://konghq.com/request-demo">contacting us</a>.</div>
       {% endif %}
-
       {% if page.alpha %}
-      <div class="alert alert-red">WARNING: This functionality is released as an alpha-quality feature. Please proceed with caution.</div>
+      <div class="alert alert-ee red condensed margin-bigger">
+        <div class="alert-body">
+          <div class="tag red">ALPHA</div>
+          <p><strong>WARNING:</strong> This plugin is released as <a href="/enterprise/latest/introduction/key-concepts/#alpha">ALPHA</a> and should not be deployed in a production environment.</p>
+          </div>
+      </div>
+      {% endif %}
+      {% if page.beta %}
+      <div class="alert alert-ee red condensed margin-bigger">
+        <div class="alert-body">
+          <div class="tag red">BETA</div>
+          <p><strong>WARNING:</strong> This plugin is released as <a href="/enterprise/latest/introduction/key-concepts/#beta">BETA</a> and should not be deployed in a production environment.
+        </div>
+      </div>
       {% endif %}
 
       {{ page.description | markdownify }}
-
-      {% if page.type == "plugin" %}
-        <hr>
-        <h2 id="terminology">Terminology</h2>
-        <ul>
-          <li><code>plugin</code>: a plugin executing actions inside Kong before or after a request has been proxied to the upstream API.</li>
-
-          {% if page.params.service_id or page.params.route_id %}
-            <li><code>Service</code>: the Kong entity representing an external <em>upstream</em> API or microservice.</li>
-          {% endif %}
-          {% if page.params.route_id %}
-            <li><code>Route</code>: the Kong entity representing a way to map downstream requests to upstream services.</li>
-          {% endif %}
-          {% if page.params.consumer_id %}
-            <li><code>Consumer</code>: an entity that makes requests for Kong to proxy; it represents either a user or an external service.</li>
-            <li><code>Credential</code>: a unique string associated with a Consumer, also referred to as an API key.</li>
-          {% endif %}
-            <li><code>Upstream service</code>: this refers to your own API/service sitting behind Kong, to which client requests are forwarded.</li>
-          {% if page.params.api_id %}
-          <li><code>API</code>: a legacy entity used to represent your upstream services. <strong>Deprecated</strong> in favor of Services since <a href="https://github.com/Kong/kong/blob/master/CHANGELOG.md#0130---20180322">CE 0.13.0</a> and <a href="https://docs.konghq.com/enterprise/changelog/#0-32">EE 0.32</a>.</li>
-          {% endif %}
-        </ul>
-      {% endif %}
 
       {% if page.installation %}
         <hr>
@@ -371,8 +190,10 @@ $ curl -X POST http://kong:8001/apis/{api}/plugins \
         <hr>
       {% endif %}
 
-      {% if page.type == "plugin" %}
-        <h2 id="configuration">Configuration</h2>
+      {% unless extn_publisher == "kong-inc" %}{{ content }}{% endunless %}
+
+      {% if page.type == "plugin" and page.params %}
+        <h2 id="configuration">Configuration Reference</h2>
         {% if page.params.protocols %}
           <p>This plugin is compatible with requests with the following protocols:</p>
           <ul>
@@ -389,38 +210,23 @@ $ curl -X POST http://kong:8001/apis/{api}/plugins \
         {% elsif page.params.dbless_compatible != nil %}
           <p>This plugin is <strong>not compatible</strong> with DB-less mode.</p>
         {% endif %}
+        {% if page.params.dbless_compatible == "partially" or page.params.dbless_compatible == true %}
+          <p>In DB-less mode, you configure {{site.base_gateway}} declaratively.
+            Therefore, the Admin API is mostly read-only. The only tasks it can perform are all
+            related to handling the declarative config, including: </p>
+            <ul>
+              <li>setting a target's health status in the load balancer</li>
+              <li>validating configurations against schemas</li>
+              <li>uploading the declarative configuration using the <code>/config</code> endpoint</li>
+            </ul>
+        {% endif %}
 
         {% if page.params.dbless_explanation %}
           {{ page.params.dbless_explanation | markdownify }}
         {% endif %}
 
-        {% if page.params.service_id %}
-          {{ plugin_config_for_service | markdownify }}
-        {% endif %}
-        {% if page.params.route_id %}
-          {{ plugin_config_for_route | markdownify }}
-        {% endif %}
-        {% if page.params.consumer_id %}
-          {{ plugin_config_for_consumer | markdownify }}
-        {% endif %}
-        {% if page.params.api_id %}
-          {{ plugin_config_for_api | markdownify }}
-        {% endif %}
-
-        <h3 id="global-plugins">Global plugins</h3>
-        <p>A plugin which is not associated to any Service, Route, or Consumer (or API, if you are using an older
-        version of Kong) is considered "global", and will be run on every request.
-        Read the <a href="/latest/admin-api/#add-plugin">Plugin Reference</a> and the
-        <a href="/latest/admin-api/#precedence">Plugin Precedence</a> sections for more information.
-        </p>
-        {% if page.params.dbless_compatible == true or page.params.dbless_compatible == "partially" %}
-        <ul>
-          <li><strong>Using a database</strong>, all plugins can be configured using the <code>http://kong:8001/plugins/</code> endpoint.</li>
-          <li><strong>Without a database</strong>, all plugins can be configured via the <code>plugins:</code> entry on the declarative configuration file.</li>
-        </ul>
-        {% else %}
-        <p>Plugins can be configured using the <code>http://kong:8001/plugins/</code> endpoint.
-        </p>
+        {% if page.params.examples != false %}
+          {% include hub-examples.html %}
         {% endif %}
 
         <h3 id="parameters">Parameters</h3>
@@ -433,7 +239,7 @@ $ curl -X POST http://kong:8001/apis/{api}/plugins \
 
       {{ page.params.extra | markdownify }}
 
-      {{ content }}
+      {% if extn_publisher == "kong-inc" %}{{ content }}{% endif %}
 
       {% if page.terms_of_service %}
         <h3 id="terms-of-service">Terms of Service</h3>
@@ -446,14 +252,30 @@ $ curl -X POST http://kong:8001/apis/{api}/plugins \
       {% endif %}
     {% endcapture %}
 
-    <aside class="page-navigation">
-      <span class="close-sidebar">Close Sidebar</span>
+    <aside class="page-navigation{% if extn_versions %} with-dropdown{% endif %}">
+      <div class="github-links">
+        <ul>
+          <li>
+            <a href="/hub">
+            <i class="fa fa-chevron-left"></i>Back to Kong Plugin Hub</a>
+          </li>
+          <li>
+            <a href="https://github.com/Kong/docs.konghq.com/edit/main/app/{{page.path}}" target="_blank">
+            <img src="/assets/images/logos/logo-github.svg" alt="github-edit-page"/>Edit this page</a>
+          </li>
+          <li>
+            <a href="https://github.com/Kong/docs.konghq.com/issues">
+            <img src="/assets/images/icons/documentation/icn-monitoring-black.svg" alt="report-issue" target="_blank"/>Report an issue</a>
+          </li>
+        </ul>
+      </div>
       {% unless page.toc == false %}
         <nav>
           {% include toc.html html=full_content h_min=2 h_max=3 sanitize=true %}
         </nav>
       {% endunless %}
 
+      {% if page.type == "plugin" or page.type == "integration" %}
       <table id="about-extn">
         <tr>
           <th colspan="2">About this {{ extn_type | capitalize }}</th>
@@ -479,6 +301,34 @@ $ curl -X POST http://kong:8001/apis/{api}/plugins \
             </ul>
           </td>
         </tr>
+        {% unless page.enterprise or page.params.dbless_compatible == nil %}
+        <tr>
+          <td>DB-less compatible?</td>
+          <td>
+            <a href="/hub/plugins/compatibility">{% if page.params.dbless_compatible == "yes" or page.params.dbless_compatible == true %}Yes{% endif %}{%
+              if page.params.dbless_compatible == "no" or page.params.dbless_compatible == false %}No{% endif %}{%
+              if page.params.dbless_compatible == "partially" %}Partially{% endif %}</a>
+          </td>
+        </tr>
+        {% endunless %}
+        {% if extn_publisher == "kong-inc" %}
+        <tr>
+          <td>Konnect tier</td>
+          <td>
+            {% if page.plus %}<span class="badge plus"></span>{%
+            elsif page.enterprise %}<span class="badge enterprise"></span>{%
+            else %}<span class="badge free"></span>{% endif %}
+          </td>
+        </tr>
+        <tr>
+          <td>Konnect Cloud</td>
+          <td>
+            {% if page.cloud == false %} Not available{%
+            elsif extn_release == extn_latest %}Available{%
+              else %}See latest plugin version for availability{% endif %}
+          </td>
+        </tr>
+        {% endif %}
         {% if page.support_url %}
           {% assign support_dom = page.support_url | split: "/" %}
           {% assign support_dom = support_dom[2] | remove: "www." | remove: "support." | remove: "help." | remove: "docs." %}
@@ -539,11 +389,7 @@ $ curl -X POST http://kong:8001/apis/{api}/plugins \
         {% if compat %}
           <tr class="kong-editions">
             <th colspan="2">
-              {% if path_array contains "kong-inc" %}
-                Bundled with...
-              {% else %}
-                Compatibility
-              {% endif %}
+                Version Compatibility
             </th>
           </tr>
           <tr class="kong-compatibility">
@@ -552,7 +398,7 @@ $ curl -X POST http://kong:8001/apis/{api}/plugins \
               {% for v in site.data.kong_versions_ee reversed %}
                 {% if ee_compatible contains v.release or ee_incompatible contains v.release %}
                   {% unless first_ee %}
-                  <h6>Kong Enterprise</h6>{% assign first_ee = true %}
+                  <h6>{{site.ee_product_name}}</h6>{% assign first_ee = true %}
                   {% endunless %}
                   <li>
                   {% if ee_compatible contains v.release %}
@@ -564,10 +410,10 @@ $ curl -X POST http://kong:8001/apis/{api}/plugins \
                 {% endif %}
               {% endfor %}
               </ul><ul class="compat-list">
-              {% for v in site.data.kong_versions reversed %}
+              {% for v in site.data.kong_versions_ce reversed %}
                 {% if ce_compatible contains v.release or ce_incompatible contains v.release %}
                   {% unless first_ce %}
-                  <h6>Kong Community</h6>{% assign first_ce = true %}
+                  <h6>{{site.ce_product_name}}</h6>{% assign first_ce = true %}
                   {% endunless %}
                   <li>
                   {% if ce_compatible contains v.release %}
@@ -583,7 +429,7 @@ $ curl -X POST http://kong:8001/apis/{api}/plugins \
           </tr>
         {% endif %}
       </table>
-
+      {% endif %}
     </aside>
 
     <div class="page-content-container">
@@ -594,6 +440,14 @@ $ curl -X POST http://kong:8001/apis/{api}/plugins \
       </div>
     </div>
   </div>
+  <div id="scroll-to-top-button">
+    <i class="fas fa-chevron-up"></i>
+  </div>
+  {% if page.feedback != false %}
+  {% include feedback-widget.html %}
+  {% endif %}
 </div>
+
+{% include image-modal.html %}
 
 <!-- {% include intercom.html %} -->

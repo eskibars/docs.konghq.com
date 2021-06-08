@@ -1,7 +1,7 @@
 ---
 name: Serverless Functions
 publisher: Kong Inc.
-version: 1.0-x
+version: 2.0-x
 
 source_url: https://github.com/Kong/kong-plugin-serverless-functions
 
@@ -9,16 +9,31 @@ desc: Dynamically run Lua code from Kong
 description: |
   Dynamically run Lua code from Kong.
 
+  <div class="alert alert-ee red">
+    <strong>Warning: </strong>The pre-function and post-function serverless plugin
+    allows anyone who can enable the plugin to execute arbitrary code.
+    If your organization has security concerns about this, disable the plugin
+    in your <code>kong.conf</code> file.
+  </div>
+
 type: plugin
+cloud: false
 categories:
   - serverless
 
 kong_version_compatibility:
     community_edition:
       compatible:
+        - 2.4.x
+        - 2.3.x
+        - 2.2.x
         - 2.1.x
     enterprise_edition:
       compatible:
+        - 2.4.x
+        - 2.3.x
+        - 2.2.x
+        - 2.1.x
         - 1.5.x
 
 params:
@@ -26,6 +41,7 @@ params:
   service_id: true
   route_id: true
   consumer_id: false
+  konnect_examples: false
   protocols: ["http", "https"]
   dbless_compatible: partially
   dbless_explanation: |
@@ -256,6 +272,12 @@ without requiring redeploying or restarting Kong.
 
 
 ### Notes
+
+#### Sandboxing
+
+Starting with version 2.0 of the plugin, the provided Lua environment is sandboxed.
+
+{% include /md/plugins-hub/sandbox.md %}
 
 #### Upvalues
 

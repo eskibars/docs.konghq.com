@@ -41,7 +41,7 @@ This will expose the Dev Portal at `http://<admin-hostname>:8003/SecureWorkspace
 
 Once enabled for the workspace, a few new links will appear in the left menu. It may take a few seconds for the Settings page to populate.
 
-You can learn more about personalization in the [the Dev Portal documentation](/enterprise/latest/developer-portal/overview/), including:
+You can learn more about personalization in the [the Dev Portal documentation](/enterprise/latest/developer-portal/), including:
 
 * [Customizing the look and feel of the site and editor](/enterprise/latest/developer-portal/theme-customization/easy-theme-editing/)
 * [Managing access](/enterprise/latest/developer-portal/administration/)
@@ -78,7 +78,7 @@ In this section, you’re going to add a new spec, the *Kong Vitals API*, to the
 
     The editor creates the file and prepares it for editing. Since you haven’t added any content to the file, the preview displays “Unable to render this definition”.
 
-5. In another tab, open the [Kong Vitals Admin API page](/enterprise/latest/admin-api/vitals/#vitals-api) to download the `vitalsSpec.yaml.` Open it in your favorite text editor and copy the contents of the file.
+5. In another tab, open the [Kong Vitals Admin API page](/enterprise/1.5.x/admin-api/vitals/#vitals-api) to download the `vitalsSpec.yaml.` Open it in your favorite text editor and copy the contents of the file.
 
 6. In the Dev Portal editor, clear the contents of the editor, then paste the contents of `vitalsSpec.yaml`.
 

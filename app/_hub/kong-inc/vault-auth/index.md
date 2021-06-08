@@ -2,13 +2,14 @@
 
 name: Vault Authentication
 publisher: Kong Inc.
-version: 1.3-x
+version: 2.1.x
 
 desc: Add Vault authentication to your Services
 description: |
   Add authentication to a Service or Route with an access token and secret token. Credential tokens are stored securely via Vault. Credential lifecyles can be managed through the Kong Admin API, or independently via Vault.
 
 enterprise: true
+cloud: false
 type: plugin
 categories:
   - authentication
@@ -16,52 +17,68 @@ categories:
 kong_version_compatibility:
     enterprise_edition:
       compatible:
+        - 2.4.x
+        - 2.3.x
+        - 2.2.x
+        - 2.1.x
         - 1.5.x
         - 1.3-x
         - 0.36-x
-        - 0.35-x
 
 params:
   name: vault-auth
   service_id: true
   route_id: true
   consumer_id: false
+  dbless_compatible: yes
+  manager_examples: false
+  konnect_examples: false
   config:
     - name: access_token_name
       required: true
       default: "`access_token`"
+      datatype: array of string elements
       description: |
-        Describes an array of comma separated parameter names where the plugin will look for an access token. The client must send the access token in one of those key names, and the plugin will try to read the credential from a header or the querystring parameter with the same name.<br>*note*: the key names may only contain [a-z], [A-Z], [0-9], [_] and [-].
-    - name: vault
+        Describes an array of comma-separated parameter names where the plugin looks for an access token. The client must send the access token in one of those key names, and the plugin will try to read the credential from a header or the querystring parameter with the same name. The key names can only contain [a-z], [A-Z], [0-9], [_], and [-].
+    - name: vault.id
       required: true
       default:
+      value_in_examples: "<UUID>"
+      datatype: foreign UUID
       description: |
         A reference to an existing `vault` object within the database. `vault` entities define the connection and authentication parameters used to connect to a Vault HTTP(S) API.
     - name: secret_token_name
       required: true
       default: "`secret_token`"
+      datatype: array of string elements
       description: |
-        Describes an array of comma separated parameter names where the plugin will look for a secret token. The client must send the secret in one of those key names, and the plugin will try to read the credential from a header or the querystring parameter with the same name.<br>*note*: the key names may only contain [a-z], [A-Z], [0-9], [_] and [-].
-    - name: key_in_body
-      required: false
+        Describes an array of comma-separated parameter names where the plugin looks for a secret token. The client must send the secret in one of those key names, and the plugin will try to read the credential from a header or the querystring parameter with the same name. The key names can only contain [a-z], [A-Z], [0-9], [_], and [-].
+    - name: tokens_in_body
+      required: true
       default: "`false`"
+      datatype: boolean
       description: |
         If enabled, the plugin will read the request body (if said request has one and its MIME type is supported) and try to find the key in it. Supported MIME types are `application/www-form-urlencoded`, `application/json`, and `multipart/form-data`.
     - name: hide_credentials
-      required: false
+      required: true
       default: "`false`"
+      datatype: boolean
       description: |
         An optional boolean value telling the plugin to show or hide the credential from the upstream service. If `true`, the plugin will strip the credential from the request (i.e. the header or querystring containing the key) before proxying it.
     - name: anonymous
       required: false
       default:
+      datatype: string
       description: |
-        An optional string (consumer uuid) value to use as an "anonymous" consumer if authentication fails. If empty (default), the request will fail with an authentication failure `4xx`. Please note that this value must refer to the Consumer `id` attribute which is internal to Kong, and **not** its `custom_id`.
+        An optional string (consumer uuid) value to use as an "anonymous" consumer if authentication fails. If empty (default), the request will fail with an authentication failure `4xx`.
+
+        **Note:** This value must refer to the Consumer `id` attribute that is internal to Kong Gateway, and **not** its `custom_id`.
     - name: run_on_preflight
-      required: false
+      required: true
       default: "`true`"
+      datatype: boolean
       description: |
-        A boolean value that indicates whether the plugin should run (and try to authenticate) on `OPTIONS` preflight requests, if set to `false` then `OPTIONS` requests will always be allowed.
+        A boolean value that indicates whether the plugin should run (and try to authenticate) on `OPTIONS` preflight requests. If set to `false`, then `OPTIONS` requests will always be allowed.
 
 ---
 
@@ -94,8 +111,8 @@ parameter                      | default | description
 
 A [Consumer][consumer-object] can have many credentials.
 
-If you are also using the [ACL](/plugins/acl/) plugin and whitelists with this
-service, you must add the new consumer to a whitelisted group. See
+If you are also using the [ACL](/plugins/acl/) plugin and allowed lists with this
+service, you must add the new consumer to an allowed group. See
 [ACL: Associating Consumers][acl-associating] for details.
 
 ### Create a Vault
@@ -105,25 +122,29 @@ A Vault object represents the connection between Kong and a Vault server. It def
 Vault objects can be created via the following HTTP request:
 
 ```bash
-$ curl -X POST http://kong:8001/vaults \
-  --data name=kong-auth \
-  --data mount=kong-auth \
-  --data protocol=http \
-  --data host=127.0.0.1 \
-  --data port=8200
-  --data token=s.m3w9gdV0uMDYFpMgEWSB2mtM
+$ curl -X POST http://localhost:8001/vaults \
+  --header 'Content-Type: multipart/form-data' \
+  --form name=kong-auth \
+  --form mount=kong-auth \
+  --form protocol=http \
+  --form host=127.0.0.1 \
+  --form port=8200 \
+  --form vault_token=<token>
+```
+
+```bash
 HTTP/1.1 201 Created
 
 {
-    "created_at": 1550538643,
-    "host": "127.0.0.1",
-    "id": "d3da058d-0acb-49c2-b7fe-72b3e9fd4b0a",
-    "mount": "kong-auth",
-    "name": "kong-auth",
-    "port": 8200,
-    "protocol": "http",
-    "token": "s.m3w9gdV0uMDYFpMgEWSB2mtM",
-    "updated_at": 1550538643
+  "host": "127.0.0.1",
+  "created_at": 1605288799,
+  "vault_token": "<token>",
+  "mount": "kong-auth",
+  "protocol": "http",
+  "name": "kong-auth",
+  "port": 8200,
+  "updated_at": 1605288799,
+  "id": "c22198a3-cf54-428b-bed2-59c1f3760823"
 }
 ```
 

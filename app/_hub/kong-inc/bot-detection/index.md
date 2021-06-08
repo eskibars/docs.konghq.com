@@ -5,7 +5,7 @@ version: 1.0.0
 
 desc: Detect and block bots or custom clients
 description: |
-  Protects a Service or a Route from most common bots and has the capability of whitelisting and blacklisting custom clients.
+  Protects a Service or a Route from most common bots and has the capability of allowing and denying custom clients.
 
 type: plugin
 categories:
@@ -14,8 +14,12 @@ categories:
 kong_version_compatibility:
     community_edition:
       compatible:
+        - 2.4.x
+        - 2.3.x
+        - 2.2.x
+        - 2.1.x
         - 2.0.x
-        - 1.5.x      
+        - 1.5.x
         - 1.4.x
         - 1.3.x
         - 1.2.x
@@ -29,14 +33,13 @@ kong_version_compatibility:
         - 0.9.x
     enterprise_edition:
       compatible:
+        - 2.4.x
+        - 2.3.x
+        - 2.2.x
+        - 2.1.x
         - 1.5.x
         - 1.3-x
         - 0.36-x
-        - 0.35-x
-        - 0.34-x
-        - 0.33-x
-        - 0.32-x
-        - 0.31-x
 
 params:
   name: bot-detection
@@ -46,16 +49,18 @@ params:
   protocols: ["http", "https"]
   dbless_compatible: yes
   config:
-    - name: whitelist
+    - name: allow
       required: false
       default:
+      datatype: array of string elements
       description: |
-        An array of regular expressions that should be whitelisted. The regular expressions will be checked against the `User-Agent` header.
-    - name: blacklist
+        An array of regular expressions that should be allowed. The regular expressions will be checked against the `User-Agent` header.
+    - name: deny
       required: false
       default:
+      datatype: array of string elements
       description: |
-        An array of regular expressions that should be blacklisted. The regular expressions will be checked against the `User-Agent` header.
+        An array of regular expressions that should be denied. The regular expressions will be checked against the `User-Agent` header.
 
 ---
 
@@ -63,7 +68,7 @@ params:
 
 The plugin already includes a basic list of rules that will be checked on every request. You can find this list on GitHub at [https://github.com/Kong/kong/blob/master/kong/plugins/bot-detection/rules.lua](https://github.com/Kong/kong/blob/master/kong/plugins/bot-detection/rules.lua).
 
-[api-object]: /latest/admin-api/#api-object
-[configuration]: /latest/configuration
-[consumer-object]: /latest/admin-api/#consumer-object
+[api-object]: /gateway-oss/latest/admin-api/#api-object
+[configuration]: /gateway-oss/latest/configuration
+[consumer-object]: /gateway-oss/latest/admin-api/#consumer-object
 [faq-authentication]: /about/faq/#how-can-i-add-an-authentication-layer-on-a-microservice/api?

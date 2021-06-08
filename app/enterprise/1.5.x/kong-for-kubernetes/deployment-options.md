@@ -9,17 +9,13 @@ resources into Kong configuration, and a proxy, which uses that configuration
 to route and control traffic. There are two options for the proxy image:
 
 * [Kong for Kubernetes Enterprise][k4k8s-enterprise-install]
-  (the [kong-enterprise-k8s][k8s-bintray] image)
 * [Kong for Kubernetes with Kong Enterprise][k4k8s-with-enterprise-install]
-  (the [kong-enterprise-edition][enterprise-bintray] image)
 
-_These repositories require a login. If you see a 404, log in through the [Kong
-repository home page](https://bintray.com/kong) first._
+{% include md/enterprise/k8s-image-note.md %}
 
-The `kong-enterprise-k8s` image is recommended for most deployments. It
-provides most Kong Enterprise plugins and runs without a database, but does not
-provide other Kong Enterprise features (Kong Manager, Dev Portal, Vitals,
-etc.).
+The `kong-enterprise-k8s` image provides most Kong Enterprise plugins and runs
+without a database, but does not provide other Kong Enterprise features (Kong
+Manager, Dev Portal, Vitals, etc.).
 
 The `kong-enterprise-edition` image is recommended for deployments that require
 features not supported by `kong-enterprise-k8s`. It supports all Kong
@@ -153,10 +149,8 @@ unavailable plugins when migrating from a database-backed deployment using the
 `kong-enterprise-k8s` image. No changes to Kubernetes resources are required if
 migrating in the opposite direction.
 
-[k8s-bintray]: https://bintray.com/kong/kong-enterprise-k8s
-[enterprise-bintray]: https://bintray.com/kong/kong-enterprise-edition-docker
-[admission-webhook]: https://github.com/Kong/kubernetes-ingress-controller/blob/master/docs/deployment/admission-webhook.md
+[admission-webhook]: https://github.com/Kong/kubernetes-ingress-controller/blob/main/docs/deployment/admission-webhook.md
 [route-validation]: /enterprise/{{page.kong_version}}/property-reference/#route_validation_strategy
-[supported-plugins]: https://github.com/Kong/kubernetes-ingress-controller/blob/master/docs/references/plugin-compatibility.md
+[supported-plugins]: https://github.com/Kong/kubernetes-ingress-controller/blob/main/docs/references/plugin-compatibility.md
 [k4k8s-enterprise-install]: /enterprise/{{page.kong_version}}/kong-for-kubernetes/install
 [k4k8s-with-enterprise-install]: /enterprise/{{page.kong_version}}/kong-for-kubernetes/install-on-kubernetes

@@ -10,6 +10,7 @@ description: |
   schema validator (body only) or a JSON Schema Draft 4-compliant validator.
 
 enterprise: true
+plus: true
 type: plugin
 categories:
   - traffic-control
@@ -17,26 +18,34 @@ categories:
 kong_version_compatibility:
     enterprise_edition:
       compatible:
+        - 2.4.x
+        - 2.3.x
+        - 2.2.x
+        - 2.1.x
         - 1.5.x
         - 1.3-x
         - 0.36-x
-        - 0.35-x
 
 params:
   name: request-validator
   service_id: true
   route_id: true
   consumer_id: true
+  dbless_compatible: yes
   config:
     - name: body_schema
-      required: true
-      value_in_examples: '[{\"name\":{\"type\": \"string\", \"required\": true}}]'
-      description: Array of schema fields.
+      required: semi
+      value_in_examples: '''[{"name":{"type": "string", "required": true}}]'''
+      datatype: string
+      description: |
+        The request body schema specification. One of `body_schema` or `parameter_schema`
+        must be specified.
 
     - name: allowed_content_types
-      required: false
-      default: "application/json"
+      required: true
+      default: ["application/json"]
       value_in_examples:
+      datatype: Set of string elements
       description: |
         List of allowed content types. <br>**Note:** Body validation is only
         done for `application/json` and skipped for any other allowed content types.
@@ -45,24 +54,29 @@ params:
       required: true
       default: "kong"
       value_in_examples:
+      datatype: string
       description: |
-        What validator to use. Supported values are `kong` (default) for using Kong's own schema
+        Which validator to use. Supported values are `kong` (default) for using Kong's own schema
         validator, or `draft4` for using a JSON Schema Draft 4-compliant validator.
 
     - name: parameter_schema
-      required: false
+      required: semi
       value_in_examples:
-      description: Array of parameter validator specifications.
-       For details and examples, see [Parameter Schema Definition](#parameter-schema-definition).
-        
+      datatype: Array of record elements
+      description: |
+        Array of parameter validator specifications. For details and examples, see
+        [Parameter Schema Definition](#parameter-schema-definition). One of `body_schema` or `parameter_schema`
+        must be specified.
+
 
     - name: verbose_response
-      required: false
+      required: true
       default: false
       value_in_examples:
+      datatype: boolean
       description: |
         If enabled, the plugin returns more verbose and detailed validation errors
-        (e.g., the name of the required field that is missing).
+        (for example, the name of the required field that is missing).
 
 ---
 
@@ -124,7 +138,7 @@ Each field definition contains the following attributes:
 | Attribute | Required | Description |
 | --- | --- | --- |
 | `type` | yes | The expected type for the field |
-| `required` | no | Whether or not the field is required |
+| `required` | no | Whether the field is required |
 
 Additionally, specific types may have their own required fields:
 
@@ -192,6 +206,7 @@ Example record schema:
 }
 ```
 
+
 The `type` field assumes one the following values:
 
 - `string`
@@ -202,12 +217,12 @@ The `type` field assumes one the following values:
 - `array`
 - `record`
 
-Each field specification may also contain "validators", which perform specific
+Each field specification may also contain validators, which perform specific
 validations:
 
 | Validator | Applies to | Description |
 | --- | --- | --- |
-| `between` | Integers | Whether the value is between two integer. Specified as an array; e.g., `{1, 10}` |
+| `between` | Integers | Whether the value is between two integers. Specified as an array; for example, `{1, 10}` |
 | `len_eq` | Arrays, Maps, Strings | Whether an array's length is a given value |
 | `len_min` | Arrays, Maps, Strings | Whether an array's length is at least a given value |
 | `len_max` | Arrays, Maps, strings | Whether an array's length is at most a given value |
@@ -219,9 +234,34 @@ validations:
 | `starts_with` | Strings | True if the string value starts with the specified substring |
 | `one_of` | Strings, Numbers, Integers | True if the string field value matches one of the specified values |
 | `timestamp` | Integers | True if the field value is a valid timestamp |
-| `uuid`| Strings | True if the string is a valud UUID |
+| `uuid`| Strings | True if the string is a valid UUID |
 
 **Note**: To learn more, see [Lua patterns][lua-patterns].
+
+#### Semantic validation for `format` attribute
+
+Structural validation alone may be insufficient to validate that an instance
+meets all the requirements of an application. The `format` keyword is defined
+to allow interoperable semantic validation for a fixed subset of values that
+are accurately described by authoritative resources, be they RFCs or other
+external specifications. The following attributes are available:
+
+| Attribute | Description |
+| --- | --- |
+| `date` | defined by [RFC 3339], sections [5.6] and further validated by [5.7] |
+| `date-time` | defined by [RFC 3339], sections [5.6] |
+| `time` | defined by [RFC 3339], sections [5.6] and further validated by [5.7] |
+
+**Note**: The value of the `format` attribute must be a string.
+
+Example `date` schema:
+
+```
+{
+  "type": "string",
+  "format": "date"
+}
+```
 
 ### Kong Schema Example
 
@@ -235,9 +275,9 @@ validations:
   },
   {
     "age": {
-        "type": "integer",
-        "required": true
-      }
+      "type": "integer",
+      "required": true
+    }
   },
   {
     "address": {
@@ -258,6 +298,13 @@ validations:
         }
       ]
     }
+  },
+  {
+    "born": {
+      "type": "string",
+      "format": "date-time",
+      "required": true
+    }
   }
 ]
 ```
@@ -271,7 +318,8 @@ Such a schema would validate the following request body:
   "address": {
     "street": "251 Post St.",
     "zipcode": "94108"
-  }
+  },
+  "born": "2009-07-20T08:30:37.012Z"
 }
 
 ```
@@ -279,8 +327,9 @@ Such a schema would validate the following request body:
 ### Parameter Schema Definition
 
 You can setup definitions for each parameter based on the OpenAPI Specification and
-the plugin will validate each parameter against it. For more information see the
-[OpenAPI specification](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#parameter-object) or the [OpenAPI examples](https://swagger.io/docs/specification/serialization/).
+the plugin will validate each parameter against it. For more information, see the
+[OpenAPI specification](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#parameter-object)
+or the [OpenAPI examples](https://swagger.io/docs/specification/serialization/).
 
 #### Fixed Fields
 
@@ -295,9 +344,9 @@ the plugin will validate each parameter against it. For more information see the
 
 #### Examples
 
-In this example we will use the plugin to validate a request's path parameter.
+In this example, use the plugin to validate a request's path parameter.
 
-1.  Add a service to Kong
+1.  Add a Service to Kong:
 
     ```
     curl -i -X POST http://kong:8001/services \
@@ -323,7 +372,7 @@ In this example we will use the plugin to validate a request's path parameter.
     }
     ```
 
-2.  Add a route with [named capture group](https://docs.konghq.com/latest/proxy/#capturing-groups)
+2.  Add a Route with [named capture group](https://docs.konghq.com/latest/proxy/#capturing-groups):
 
     ```
     curl -i -X POST http://kong:8001/services/httpbin/routes \
@@ -359,7 +408,7 @@ In this example we will use the plugin to validate a request's path parameter.
     }
     ```
 
-3. Enable request-validator plugin to validate body and parameter
+3. Enable `request-validator` plugin to validate body and parameter:
 
     ```
     curl -i -X POST http://kong:8001/services/httpbin/plugins \
@@ -419,35 +468,39 @@ In this example we will use the plugin to validate a request's path parameter.
     }
     ```
 
-    Here validation will make sure `status_code` is a number.
+4. In these step examples, validation makes sure that `status_code` is a number.
 
-4. A proxy request with a non-numerical status code will be blocked
+   A proxy request with a non-numerical status code is blocked:
 
     ```
     curl -i -X GET http://kong:8000/status/abc
     HTTP/1.1 400 Bad Request
-    ..
+    ...
 
     {"message":"request param doesn't conform to schema"}
     ```
 
-    but it will be allowed with a numeric status code
+    A proxy request with a numeric status code is allowed:
 
     ```
     curl -i -X GET http://kong:8000/status/200
     HTTP/1.1 200 OK
     X-Kong-Upstream-Latency: 163
     X-Kong-Proxy-Latency: 37
-    ..
+    ...
 
     ```
 
 ### Further References
 
 The Kong schema validation format is based on the plugin schemas.
-For more information, see the Kong plugin docs on [storing custom entities][schema-docs].
+For more information, see the Kong plugin docs on
+[storing custom entities](/gateway-oss/latest/plugin-development/custom-entities/#defining-a-schema).
 
 ---
 
 [schema-docs]: /1.0.x/plugin-development/custom-entities/#defining-a-schema
 [lua-patterns]: https://www.lua.org/pil/20.2.html
+[RFC 3339]: https://tools.ietf.org/html/rfc3339
+[5.6]: https://tools.ietf.org/html/rfc3339#section-5.6
+[5.7]: https://tools.ietf.org/html/rfc3339#section-5.7

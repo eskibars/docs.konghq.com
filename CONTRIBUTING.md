@@ -20,13 +20,20 @@ Consult the Table of Contents below, and jump to the desired section.
   - [Submitting a patch](#submitting-a-patch)
   - [Kong Hub contributions](#kong-hub-contributions)
   - [Writing plugin documentation](#writing-plugin-documentation)
+  - [Git Best Practices](#git-best-practices)
     - [Git branches](#git-branches)
     - [Commit atomicity](#commit-atomicity)
     - [Commit message format](#commit-message-format)
     - [Linting](#linting)
   - [Contributing images, videos, etc](#contributing-images-videos-etc)
-  - [Table of Contents generator](#table-of-contents-generator)
-  - [Using tabs within topics](#using-tabs-within-topics)
+  - [Formatting Documentation](#formatting-documentation)
+    - [Markdown Front Matter](#markdown-front-matter)
+    - [Variables](#variables)
+    - [Links](#links)
+    - [Info Blocks](#info-blocks)
+    - [Table of Contents generator](#table-of-contents-generator)
+    - [Codeblocks](#codeblocks)
+    - [Using navtabs within topics](#using-navtabs-within-topics)
   - [Contributor T-shirt](#contributor-t-shirt)
 
 
@@ -61,7 +68,7 @@ you may find on this website. Please read the below section about
 
 Adding and improving listings in the Kong Hub is also encouraged! Please
 read the below section
-about [Kong Hub contributions](#kong-hub-contributions)
+about [Kong Hub contributions](#kong-hub-contributions).
 
 If you wish to contribute to Kong itself (as opposed to the documentation
 website), then please consult the [Kong Contributing
@@ -105,8 +112,9 @@ to verify a few things:
   `git rebase`; this is important to ensure your commit history is clean and
    linear)
 - The linting is succeeding: run `npm run test` (see the development
-  documentation for additional details)
-- You've tagged "Team Docs" as reviewers
+  documentation for additional details).
+  _Note: The linter won't catch most errors in Plugin Hub documentation. You
+  need to check for any errors manually, with a [local build](https://github.com/Kong/docs.konghq.com/blob/master/CONTRIBUTING.md)._
 
 If the above guidelines are respected, your Pull Request has all its chances
 to be considered and will be reviewed by a maintainer.
@@ -136,7 +144,7 @@ Adding a new listing to the Kong Hub may be proposed by:
     ```
     git clone https://github.com/Kong/docs.konghq.com.git
     ```
-1. Move into the repo's directory
+2. Move into the repo's directory
     ```
     cd docs.konghq.com
     ```
@@ -155,11 +163,11 @@ start with, then the file name `index.md` should remain.
 1. Edit your `index.md` file based on the guidance in comments in that file -
 you'll find lots of helpful examples in other extension files. If you are
 documenting a Kong plugin, be sure to see the next section.
-1. If you have a custom logo, add a square-format PNG file to
+1. Custom logos are required for publication on the Kong plugin hub. Custom logos 
+should be a square-format PNG file, 
+with no transparency, and 120x120 pixels in size. Add the logo file to
 `/app/_assets/images/icons/hub/` - the filename of your image should be
 `publisher_extension` using the "publisher" and "extension" name from step 2.
-Custom logos are optional. If you don't have a custom logo, please duplicate
-an existing default logo file, and rename it as noted above.
 1. Be sure to run the docs site locally per the instructions in
 the README - you should find your Hub contribution listed at
 `localhost:3000/hub`
@@ -217,6 +225,7 @@ the existing plugins for examples, and see additional advice in
 
 [Back to TOC](#table-of-contents)
 
+### Git Best Practices
 
 #### Git branches
 
@@ -347,7 +356,6 @@ $ npm run test
 
 [Back to TOC](#table-of-contents)
 
-
 ### Contributing images, videos, etc
 
 Binary files like images and videos should not be included in your pull
@@ -365,18 +373,110 @@ Instead, please:
 
 [Back to TOC](#table-of-contents)
 
+### Formatting Documentation
 
-### Table of Contents generator
+#### Markdown Front Matter
+
+Markdown files on the doc site (excluding `docs.konghq.com/hub/`) must have a
+yaml front matter section with at least one parameter (`title`). You can also
+specify additional parameters to change how the doc source renders in the
+output.
+
+**Required:**
+
+``` yaml
+title: Page Title
+```
+
+**Optional:**
+
+``` yaml
+no_search: true
+# Disables search for the page.
+
+toc: false
+# Disables the right-hand nav for the page; useful if the page is short and has
+# one or no headers.
+
+beta: true
+alpha: true
+# Labels the page as beta or alpha; adds a banner to the top of the page.
+
+disable_image_expand: true
+# Stops images from expanding in a modal on click. Sets it for the entire page.
+
+class: no-copy-code
+# Disables the copy code button in any code blocks on the page.
+```
+
+[Back to TOC](#table-of-contents)
+
+#### Variables
+Use variables for product names and release versions.
+
+- `{{page.kong_version}}` - Outputs the version of the current page
+- `{{site.ee_product_name}}` - Kong Enterprise
+- `{{site.ce_product_name}}` - Kong Gateway
+
+[Back to TOC](#table-of-contents)
+
+#### Links
+In markdown(`.md`) files, use relative links with a version variable.
+- For Community: `/{{page.kong_version}}/file`
+- For Enterprise: `/enterprise/{{page.kong_version}}/file`
+
+If you're adding a new topic, you also need to add it to the nav file for its
+version. These are located under `app/_data`. In these files, the path is
+relative to the versioned folder.
+
+For example, if the project path is `app/enterprise/2.1.x/overview`, the path in
+the nav file would be `/overview`.
+
+[Back to TOC](#table-of-contents)
+
+#### Info Blocks
+
+Info blocks are HTML divs that follow this basic format:
+```
+<div class="alert alert-type">
+   Some text.
+</div>
+```
+
+For a basic info block, use:
+```
+<div class="alert alert-ee blue">
+Some text.
+</div>
+```
+
+For a warning, use:
+```
+<div class="alert alert-warning">
+   Some text.
+</div>
+```
+
+For a breaking issue or notice of alpha/beta, use:
+```
+<div class="alert alert-ee red">
+   Some text.
+</div>
+```
+
+[Back to TOC](#table-of-contents)
+
+#### Table of Contents generator
 
 Almost all pages have an automatic Table of Contents (ToC) added to the right of
 the page.
 
 To inhibit the automatic addition of ToC (such as on API reference pages),
-add the following to the front-matter: `toc: false`
+add the following to the front-matter: `toc: false`.
 
 This ToC generator depends on headings being correctly coded in the markdown
 portion of the doc site files, and will only pick up H2 and H3 level headings.
-If a page has an incorrectly-formatted ToC, be sure to check:
+If a page has an incorrectly-formatted ToC, be sure to check the following:
 
 - Heading levels must be correctly nested. Thus, heading levels like this:
 
@@ -396,8 +496,38 @@ will cause the first H3 to be skipped, and should be corrected to:
 
 [Back to TOC](#table-of-contents)
 
+#### Codeblocks
 
-### Using tabs within topics
+Codeblocks are containers for your code examples. In Markdown, you can create
+them using three backticks, aka fenced codeblocks:
+
+<code>
+```bash</br>
+some code here</br>
+```
+</code>
+
+Include a language whenever possible (in the example above, that language is
+`bash`). This will format your codeblocks using language-specific syntax.
+
+You can also create tabbed codeblocks, so that users can easily switch to
+their preferred format. See [navtabs for codeblocks](#navtabs-for-codeblocks).
+
+##### Line numbers
+By default, every codeblock is generated with line numbers, which is useful for
+calling out specific sections of code. If you need to disable the line numbers,
+use the `{% highlight %}` tag with an optional language class instead of
+ backticks. For example:
+
+```
+{% highlight bash %}
+some code here
+{% endhighlight %}
+```
+
+[Back to TOC](#table-of-contents)
+
+#### Using navtabs within topics
 
 If your topic provides instructions for two or more methods of completing a
 task, you can nest them inside `navtabs`. For example, this topic
@@ -421,8 +551,36 @@ Here's some more content.
 {% endnavtabs %}
 ```
 
-On initial page load, the first tab ("<your title here>" in the example above)
+On initial page load, the first tab (`"<your title here>"` in the example above)
 will be the one displayed.
+
+> **Note:** You can’t nest navtabs within navtabs.
+
+##### Navtabs for codeblocks
+
+A specialized use of navtabs is the `codeblock` style. This will create copyable
+tabbed codeblocks for easy code comparison and better use of space. See
+[here](https://docs.konghq.com/enterprise/2.1.x/deployment/installation/kong-for-kubernetes/)
+for an example of this style in use.
+
+> **Important!** Codeblock navtabs must contain codeblocks and **nothing else**.
+Additionally, tabbed codeblocks can't be used in lists or steps.
+
+To create a tabbed codeblock, specify the `codeblock` class in the first element
+when creating a `navtabs` group:
+
+    {% navtabs codeblock %}
+    {% navtab cURL %}
+     ```sh
+     $ curl some request
+     ```
+    {% endnavtab %}
+    {% navtab HTTPie %}
+     ```sh
+     $ httpie some request
+     ```
+    {% endnavtab %}
+    {% endnavtabs %}
 
 [Back to TOC](#table-of-contents)
 

@@ -17,139 +17,24 @@ steps to configure PostgreSQL. For assistance in setting up Cassandra, please co
 
 To complete this installation you will need:
 
-* A valid Bintray account. You will need your **username**, account **password** and account **API Key**.
-  * Example:
-    * **Bintray Access key**: `john-company`
-    * **Bintray username**: `john-company@kong`
-    * **Bintray password**: `12345678`
-    * **Bintray API key**: `12234e314356291a2b11058591bba195830`
-  * The API Key can be obtained by visiting [https://bintray.com/profile/edit](https://bintray.com/profile/edit) and selecting **API Key**
-* A supported RHEL system with root equivalent access.
-* A valid Kong Enterprise license JSON file, this can be found in your Bintray account. See [Accessing Your License](/enterprise/latest/deployment/access-license)
+{% include /md/enterprise/license.md license='prereq' %}
+* A supported RHEL system with root-equivalent access.
 
 ## Step 1. Prepare to Install Kong Enterprise and Download the License File
 
-There are two options to install Kong Enterprise on RHEL. Both require a login to Bintray.
+{% include /md/enterprise/download/rhel.md version='1.5' %}
 
-Log in to [Bintray](http://bintray.com). Your Kong Sales or Support contact will assign credentials to you.
+### Prepare your license
 
-{% navtabs %}
-{% navtab Download RPM file %}
+Securely copy the license file to your home directory on the RHEL system:
 
-1. Go to [https://bintray.com/kong/kong-enterprise-edition-rpm/rhel](https://bintray.com/kong/kong-enterprise-edition-rpm/rhel).
-2. Select the latest Kong version from the list.
-3. From the Kong version detail page, select the **Files** tab.
-4. Select the RHEL version appropriate for your environment. e.g. `RHEL` -> `8`.
-5. Save the RPM file available: e.g. `kong-enterprise-edition-1.5.0.1.rhel8.noarch.rpm`
-6. Copy the RPM file to your home directory on the RHEL system. You may use a command like:
-
-    ```bash
-    $ scp kong-enterprise-edition-1.5.0.1.rhel8.noarch.rpm <rhel user>@<server>:~
-    ```
-
-*Optional:* The following steps are for verifying the integrity of the package. They are not necessary to move on to [installation](#option-1-if-installing-using-a-downloaded-rpm-package).
-
-7. Kong's official Key ID is `2cac36c51d5f3726`. Verify it by querying the RPM package and comparing it to the Key ID:
-
-    ```bash
-    $ rpm -qpi kong-enterprise-edition-1.5.0.1.rhel8.noarch.rpm | grep Signature
-    ```
-
-8. Download Kong's official public key to ensure the integrity of the RPM package:
-
-    ```bash
-    $ curl -o kong.key https://bintray.com/user/downloadSubjectPublicKey?username=kong
-    $ rpm --import kong.key
-    $ rpm -K kong-enterprise-edition-1.5.0.1.rhel8.noarch.rpm
-    ```
-
-9. Verify you get an OK check. You should have an output similar to this:
-
-    ```
-    kong-enterprise-edition-1.5.0.1.rhel8.noarch.rpm: digests signatures OK
-    ```  
-
-{% endnavtab %}
-{% navtab Download Kong repo file and add to Yum repo %}
-
-1. Click this URL to download the Kong Enterprise RPM repo file: [https://bintray.com/kong/kong-enterprise-edition-rpm/rpm](https://bintray.com/kong/kong-enterprise-edition-rpm/rpm).
-
-2. Edit the repo file using your preferred editor and alter the baseurl line as follows:
-
-    ```
-    baseurl=https://USERNAME:API_KEY@kong.bintray.com/kong-enterprise-edition-rpm/rhel/RELEASEVER
-    ```
-
-    Replace `USERNAME` with your Bintray account user name.
-    Replace `API_KEY` with your Bintray API key. You can find your key on your Bintray profile page at https://bintray.com/profile/edit and selecting the API Key menu item.
-    Replace `RELEASEVER` with the major RHEL version number on your target system. For example, for version 7.7.1908, the appropriate `RELEASEVER` replacement is 7.
-
-    The result should look something like this:
-    ```
-    baseurl=https://john-company:12234e314356291a2b11058591bba195830@kong.bintray.com/kong-enterprise-edition-rpm/rhel/8
-    ```
-
-3. Securely copy the changed repo file to your home directory on the RHEL system:
-
-    ```bash
-    $ scp bintray--kong-kong-enterprise-edition-rpm.repo <rhel user>@<server>:~
-    ```
-
-{% endnavtab %}
-{% endnavtabs %}
-
-### Download your Kong Enterprise License
-
-1. Download your license file from your account files in Bintray: `https://bintray.com/kong/<YOUR_REPO_NAME>/license#files`
-
-2. Securely copy the license file to your home directory on the RHEL system:
-
-    ```
-    $ scp license.json <rhel username>@<server>:~
-    ```
-
-### Result
-
-You should now have two files in your home directory on the target RHEL system:
-- Either the Kong RPM or Kong Yum repo file.
-- The license file `license.json`
+```
+$ scp license.json <rhel username>@<server>:~
+```
 
 ## Step 2. Install Kong Enterprise
 
-{% navtabs %}
-{% navtab Using downloaded RPM package %}
-
-1. Install EPEL (Extra Packages for Enterprise Linux), if not already installed:
-
-    ```bash
-    $ sudo dnf install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm -y
-    $ sudo yum install epel-release -y
-    ```
-    
-2. Execute a command similar to the following, using the appropriate RPM file name you downloaded:
-
-    ```bash
-    $ sudo yum install kong-enterprise-edition-1.5.0.1.rhel8.noarch.rpm -y
-    ```
-*Note: If you're using RHEL 7.0, change the version of the RPM file above from 8 to 7.*
-
-{% endnavtab %}
-{% navtab Using Yum repo %}
-
-1. Move the repo file in your home directory to the /etc/yum.repos.d/ directory:
-
-    ```bash
-    $ sudo mv bintray--kong-kong-enterprise-edition-rpm.repo /etc/yum.repos.d/
-    ```
-
-2. Begin the installation using the Yum repository:
-
-    ```bash
-    $ sudo yum update -y
-    $ sudo yum install kong-enterprise-edition -y
-    ```    
-{% endnavtab %}
-{% endnavtabs %}
+{% include /md/enterprise/install-2.x.md %}
 
 
 ### Copy the License File

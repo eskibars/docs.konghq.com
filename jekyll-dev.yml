@@ -4,11 +4,15 @@ destination: dist
 permalink: pretty
 timezone: America/San_Francisco
 markdown: kramdown
-incremental: true
-
 kramdown:
   syntax_highlighter_opts:
-    disable : true
+    css_class: 'highlight'
+    span:
+      line_numbers: false
+    block:
+      line_numbers: true
+      start_line: 1
+incremental: true
 
 keep_files:
   - assets
@@ -20,7 +24,7 @@ description: "Secure, Manage &amp; Extend your APIs or Microservices with plugin
 links:
   web: https://docs.konghq.com
   share: https://docs.konghq.com # legacy link, must maintain for social sharing counters
-  download: https://bintray.com/kong
+  download: https://download.konghq.com
   instaclustr: "https://www.instaclustr.com/products/kong/?utm_source=partnership&utm_medium=link&utm_campaign=mashape"
 repos:
   kong: https://github.com/Kong/kong
@@ -70,6 +74,9 @@ extensions:
     # - name: dev portal extension
     #   slug: dev-mod
 
+include:
+  - _redirects
+
 exclude:
   - node_modules
   - jekyll-cache
@@ -82,12 +89,17 @@ plugins:
 
 defaults:
   - scope:
-      path: 'studio'
+      path: ''
     values:
-      layout: 'docs'
+      layout: 'docs-v2'
 
   - scope:
-      path: ''
+      path: 'enterprise'
+    values:
+      layout: 'docs-v2'
+
+  - scope:
+      path: 'gateway-oss'
     values:
       layout: 'docs-v2'
 
@@ -97,14 +109,24 @@ defaults:
       layout: 'install'
 
   - scope:
-      path: 'docs/ee'
-    values:
-      layout: 'docs'
-
-  - scope:
       path: 'getting-started-guide'
     values:
-      layout: 'getting-started-guide'
+      layout: 'docs-v2'
+
+  - scope:
+      path: 'deck'
+    values:
+      layout: 'docs-v2'
+
+  - scope:
+      path: 'mesh'
+    values:
+      layout: 'docs-v2'
+
+  - scope:
+      path: 'kubernetes-ingress-controller'
+    values:
+      layout: 'docs-v2'
 
   - scope:
       path: 'about'
@@ -120,7 +142,19 @@ defaults:
       permalink: /:collection/:path
 
 # product name vars
-ee_gateway_name: Kong Gateway (Enterprise)
-ee_product_name: Kong Enterprise
-ce_product_name: Kong Gateway
+ee_gateway_name: Kong Gateway
+ee_product_name: Kong Gateway (Enterprise)
+ce_product_name: Kong Gateway (OSS)
 base_gateway: Kong Gateway
+mesh_product_name: Kong Mesh
+kic_product_name: Kubernetes Ingress Controller
+konnect_product_name: Kong Konnect
+konnect_short_name: Konnect
+konnect_saas: Konnect Cloud
+package_name: Kong Konnect
+company_name: Kong Inc.
+
+# Konnect tier vars
+free_tier: Kong Gateway
+plus_tier: Kong Konnect Plus
+enterprise_tier: Kong Konnect Enterprise

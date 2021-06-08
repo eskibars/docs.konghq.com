@@ -1,7 +1,7 @@
 ---
 name: Kong JWT Signer
 publisher: Kong Inc.
-version: 1.3-x
+version: 2.2.x
 
 desc: Verify and (re-)sign one or two tokens in a request
 description: |
@@ -14,6 +14,7 @@ description: |
   (one given to end user and one given to client application).
 
 enterprise: true
+plus: true
 type: plugin
 categories:
   - authentication
@@ -23,11 +24,13 @@ kong_version_compatibility:
       compatible:
     enterprise_edition:
       compatible:
+        - 2.4.x
+        - 2.3.x
+        - 2.2.x
+        - 2.1.x
         - 1.5.x
         - 1.3-x
         - 0.36-x
-        - 0.35-x
-        - 0.34-x
 
 params:
   name: jwt-signer
@@ -35,6 +38,7 @@ params:
   service_id: true
   route_id: true
   consumer_id: false
+  dbless_compatible: yes
 ---
 
 ## Contents
@@ -43,6 +47,7 @@ params:
 * [Plugin Configuration Parameters](#plugin-configuration-parameters)
   * [Description of Plugin Configuration Parameters](#description-of-plugin-configuration-parameters)
     * [config.realm](#configrealm)
+    * [config.enable_hs_signatures](#configenable_hs_signatures)
     * [config.access_token_issuer](#configaccess_token_issuer)
     * [config.access_token_keyset](#configaccess_token_keyset)
     * [config.access_token_jwks_uri](#configaccess_token_jwks_uri)
@@ -115,7 +120,7 @@ params:
 
 ## Plugin Configuration
 
-Configure this plugin on a [Service](/latest/admin-api/#service-object) by
+Configure this plugin on a [Service](/gateway-oss/latest/admin-api/#service-object) by
 
 {% tabs %}
 {% tab With a database %}
@@ -154,6 +159,10 @@ Also for introspection to work, you need to specify introspection endpoints:
 When authentication or authorization fails, or there is an unexpected error, the plugin will
 send `WWW-Authenticate` header with `realm` attribute value of this configuration parameter.
 
+#### `config.enable_hs_signatures`
+
+Tokens signed with HMAC algorithms such as HS256, HS384 or HS512 are not accepted by default.
+If you need to accept such tokens for verification, you can enable this setting. Default: `false`.
 
 #### `config.enable_instrumentation`
 
@@ -227,7 +236,7 @@ consumers have an `id`, a `username` and a `custom_id`. The `config.access_token
 is used to tell the plugin what of these Kong consumer properties can be used for mapping. If this
 parameter is enable but the mapping fails (e.g. in-existent Kong consumer), the plugin will respond
 with `403 Forbidden`. Kong consumer mapping is useful when you want to communicate this information
-to other plugins such as ACL (access control through blacklisting and whitelisting) or rate-limiting.
+to other plugins such as ACL (access control through allowed and denied lists) or rate-limiting.
 The plugin will also set a couple of standard Kong upstream consumer headers.
 
 
@@ -279,7 +288,7 @@ the value, e.g. `resource=` or `a=1&b=&c`.
 #### `config.access_token_introspection_hint`
 
 If you need to give `hint` parameter when introspecting access token you can use this parameter to
-specify the value of such parameter. By default we send `hint=access_token`.  
+specify the value of such parameter. By default we send `hint=access_token`.
 
 
 #### `config.access_token_introspection_jwt_claim`
@@ -312,7 +321,7 @@ With this parameter you can specify the claim/property in access token introspec
 This supports nested claims, e.g. with Keycloak you could use `[ "realm_access", "roles" ]`
 which can be given as `realm_access,roles` (form post). If the claim is not found in access
 token introspection results, and you have specified `config.access_token_introspection_scopes_required`,
-the plugin will respond with `403 Forbidden`.  
+the plugin will respond with `403 Forbidden`.
 
 
 #### `config.access_token_introspection_consumer_claim`
@@ -324,7 +333,7 @@ Kong consumer entity. Kong consumers have an `id`, a `username` and a `custom_id
 Kong consumer properties can be used for mapping. If this parameter is enable but the mapping fails
 (e.g. in-existent Kong consumer), the plugin will respond with `403 Forbidden`. Kong consumer mapping
 is useful when you want to communicate this information to other plugins such as ACL (access control
-through blacklisting and whitelisting) or rate-limiting. The plugin will also set a couple of standard
+through allowed and denied lists) or rate-limiting. The plugin will also set a couple of standard
 Kong upstream consumer headers.
 
 
@@ -485,7 +494,7 @@ consumers have an `id`, a `username` and a `custom_id`. The `config.channel_toke
 is used to tell the plugin what of these Kong consumer properties can be used for mapping. If this
 parameter is enable but the mapping fails (e.g. in-existent Kong consumer), the plugin will respond
 with `403 Forbidden`. Kong consumer mapping is useful when you want to communicate this information
-to other plugins such as ACL (access control through blacklisting and whitelisting) or rate-limiting.
+to other plugins such as ACL (access control through allowed and denied lists) or rate-limiting.
 The plugin will also set a couple of standard Kong upstream consumer headers.
 
 
@@ -580,7 +589,7 @@ Kong consumer entity. Kong consumers have an `id`, a `username` and a `custom_id
 Kong consumer properties can be used for mapping. If this parameter is enable but the mapping fails
 (e.g. in-existent Kong consumer), the plugin will respond with `403 Forbidden`. Kong consumer mapping
 is useful when you want to communicate this information to other plugins such as ACL (access control
-through blacklisting and whitelisting) or rate-limiting. The plugin will also set a couple of standard
+through allowed and denied lists) or rate-limiting. The plugin will also set a couple of standard
 Kong upstream consumer headers.
 
 
@@ -692,9 +701,9 @@ Parameter                                            | Default
 `config.access_token_upstream_header`                | `"authorization:bearer"`
 `config.access_token_upstream_leeway`                | `0`
 `config.access_token_introspection_endpoint`         |
-`config.access_token_introspection_authorization`    |  
+`config.access_token_introspection_authorization`    |
 `config.access_token_introspection_body_args`        |
-`config.access_token_introspection_hint`             | `"access_token"`  
+`config.access_token_introspection_hint`             | `"access_token"`
 `config.access_token_introspection_jwt_claim`        |
 `config.access_token_introspection_scopes_required`  |
 `config.access_token_introspection_scopes_claim`     | `[ "scope" ]`

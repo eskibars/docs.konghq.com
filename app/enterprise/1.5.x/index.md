@@ -1,6 +1,6 @@
 ---
-title: Documentation for Kong Enterprise
-skip_read_time: true
+title: Documentation for Kong Gateway (Enterprise)
+subtitle: Formerly known as Kong Enterprise, now part of Kong Konnect
 is_homepage: true
 ---
 
@@ -41,9 +41,9 @@ is_homepage: true
   </div>
 
   <div class="docs-grid-block">
-    <h3><a href="/enterprise/{{page.kong_version}}/developer-portal/introduction">Kong Dev Portal</a></h3>
+    <h3><a href="/enterprise/{{page.kong_version}}/developer-portal/">Kong Dev Portal</a></h3>
     <p>Explore how to enable, configure, and customize the Kong Dev Portal.</p>
-    <a href="/enterprise/{{page.kong_version}}/developer-portal/introduction">Learn more &rarr;</a>
+    <a href="/enterprise/{{page.kong_version}}/developer-portal/">Learn more &rarr;</a>
   </div>
 
   <div class="docs-grid-block">

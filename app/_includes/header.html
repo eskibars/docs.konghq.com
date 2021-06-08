@@ -8,9 +8,8 @@
 {% elsif page.header_title %}
     {% assign header_title = page.header_title %}
 {% endif %}
-{% if header_icon and header_title %}
+{% if header_title %}
   <header class="page-header">
-    <div class="page-header-bg"></div>
     <div class="container">
       {% if header_icon %}
         <div class="page-header-icon">
@@ -20,7 +19,7 @@
 
       <div class="page-header-title">
         {% if page.breadcrumbs %}
-          <ul class="breadcrumbs">
+          <ul class="breadcrumbs install">
             {% for breadcrumb in page.breadcrumbs %}
               <li class="breadcrumb-item{% if page.url == breadcrumb[1] %} active{% endif %}">
                 {% if page.id == 'page-plugin' %}
@@ -39,22 +38,6 @@
           <p>{{ page.header_caption }}{{ include.header_caption }}</p>
         {% endif %}
       </div>
-
-      {% if page.header_btn_repo_href %}
-        <div class="page-header-right">
-          {% if page.header_btn_repo_text %}
-            <a class="page-header-btn" href="{{ page.header_btn_repo_href | liquify }}" target="{{ page.header_btn_repo_target }}">{{ page.header_btn_repo_text | liquify }}</a>
-          {% else %}
-            <a class="page-header-btn page-header-btn-repo" href="{{ page.header_btn_repo_href | liquify }}" target="{{ page.header_btn_repo_target }}">Source&nbsp;Code</a>
-          {% endif %}
-        </div>
-      {% endif %}
-
-      {% if page.header_html %}
-        <div class="page-header-right">
-          {{ page.header_html }}
-        </div>
-      {% endif %}
     </div>
   </header>
 {% endif %}

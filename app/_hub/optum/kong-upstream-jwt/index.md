@@ -30,16 +30,7 @@ kong_version_compatibility:
       - 0.14.x
       - 0.13.x
       - 0.12.x
-    incompatible:
-      - 0.11.x
-      - 0.10.x
-      - 0.9.x
-      - 0.8.x
-      - 0.7.x
-      - 0.6.x
-      - 0.5.x
-      - 0.3.x
-      - 0.2.x
+
   enterprise_edition:
     compatible:
       - 0.34-x
@@ -47,8 +38,7 @@ kong_version_compatibility:
       - 0.32-x
       - 0.31-x
       - 0.30-x
-    incompatible:
-      - 0.29-x
+
 
 
 params:
@@ -57,7 +47,7 @@ params:
   service_id: true
   consumer_id: false
   route_id: true
-
+  dbless_compatible: yes
 extra: |
   Installing this plugin globally will ensure security across all proxies for service providers who implement the JWT validation correctly.
 ###############################################################################

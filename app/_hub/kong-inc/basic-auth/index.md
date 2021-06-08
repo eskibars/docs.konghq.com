@@ -1,19 +1,13 @@
 ---
 name: Basic Authentication
 publisher: Kong Inc.
-version: 1.0.0
+version: 2.2.0
 
 desc: Add Basic Authentication to your Services
 description: |
-  Add Basic Authentication to a Service or a Route with username and password protection. The plugin will check for valid credentials in the `Proxy-Authorization` and `Authorization` header (in this order).
+  Add Basic Authentication to a Service or a Route with username and password protection. The plugin
+  will check for valid credentials in the `Proxy-Authorization` and `Authorization` header (in that order).
 
-  <div class="alert alert-warning">
-    <strong>Note:</strong> The functionality of this plugin as bundled
-    with versions of Kong prior to 0.14.0 and Kong Enterprise prior to 0.34
-    differs from what is documented herein. Refer to the
-    <a href="https://github.com/Kong/kong/blob/master/CHANGELOG.md">CHANGELOG</a>
-    for details.
-  </div>
 
 type: plugin
 categories:
@@ -22,6 +16,10 @@ categories:
 kong_version_compatibility:
     community_edition:
       compatible:
+        - 2.4.x
+        - 2.3.x
+        - 2.2.x      
+        - 2.1.x
         - 2.0.x
         - 1.5.x
         - 1.4.x
@@ -44,30 +42,30 @@ kong_version_compatibility:
         - 0.2.x
     enterprise_edition:
       compatible:
+        - 2.4.x
+        - 2.3.x
+        - 2.2.x
+        - 2.1.x
         - 1.5.x
         - 1.3-x
         - 0.36-x
-        - 0.35-x
-        - 0.34-x
-        - 0.33-x
-        - 0.32-x
-        - 0.31-x
 
 params:
   name: basic-auth
   service_id: true
   route_id: true
   consumer_id: false
-  protocols: ["http", "https"]
+  protocols: ["http", "https", "grpc", "grpcs"]
   dbless_compatible: partially
   dbless_explanation: |
     Consumers and Credentials can be created with declarative configuration.
-
+    
     Admin API endpoints which do POST, PUT, PATCH or DELETE on Credentials are not available on DB-less mode.
   config:
     - name: hide_credentials
       required: false
       value_in_examples: true
+      datatype: boolean
       default: "`false`"
       description: |
         An optional boolean value telling the plugin to show or hide the credential from the upstream service. If `true`, the plugin will strip the credential from the request (i.e. the `Authorization` header) before proxying it.
@@ -75,13 +73,14 @@ params:
     - name: anonymous
       required: false
       default:
+      datatype: string
       description: |
         An optional string (consumer uuid) value to use as an "anonymous" consumer if authentication fails. If empty (default), the request will fail with an authentication failure `4xx`. Please note that this value must refer to the Consumer `id` attribute which is internal to Kong, and **not** its `custom_id`.
   extra: |
     Once applied, any user with a valid credential can access the Service.
     To restrict usage to only some of the authenticated users, also add the
-    [ACL](/plugins/acl/) plugin (not covered here) and create whitelist or
-    blacklist groups of users.
+    [ACL](/plugins/acl/) plugin (not covered here) and create allowed or
+    denied groups of users.
 
 ---
 
@@ -119,8 +118,8 @@ parameter                       | description
 `username`<br>*semi-optional*   | The username of the consumer. Either this field or `custom_id` must be specified.
 `custom_id`<br>*semi-optional*  | A custom identifier used to map the consumer to another database. Either this field or `username` must be specified.
 
-If you are also using the [ACL](/plugins/acl/) plugin and whitelists with this
-service, you must add the new consumer to a whitelisted group. See
+If you are also using the [ACL](/plugins/acl/) plugin and allow lists with this
+service, you must add the new consumer to the allowed group. See
 [ACL: Associating Consumers][acl-associating] for details.
 
 ### Create a Credential
@@ -176,6 +175,12 @@ $ curl http://kong:8000/{path matching a configured Route} \
     -H 'Authorization: Basic QWxhZGRpbjpPcGVuU2VzYW1l'
 ```
 
+gRPC clients are supported too:
+
+```bash
+$ grpcurl -H 'Authorization: Basic QWxhZGRpbjpPcGVuU2VzYW1l' ...
+```
+
 ### Upstream Headers
 
 When a client has been authenticated, the plugin will append some headers to the request before proxying it to the upstream service, so that you can identify the Consumer in your code:
@@ -183,10 +188,14 @@ When a client has been authenticated, the plugin will append some headers to the
 * `X-Consumer-ID`, the ID of the Consumer on Kong
 * `X-Consumer-Custom-ID`, the `custom_id` of the Consumer (if set)
 * `X-Consumer-Username`, the `username` of the Consumer (if set)
-* `X-Credential-Username`, the `username` of the Credential (only if the consumer is not the 'anonymous' consumer)
+* `X-Credential-Identifier`, the identifier of the Credential (only if the consumer is not the 'anonymous' consumer)
 * `X-Anonymous-Consumer`, will be set to `true` when authentication failed, and the 'anonymous' consumer was set instead.
 
 You can use this information on your side to implement additional logic. You can use the `X-Consumer-ID` value to query the Kong Admin API and retrieve more information about the Consumer.
+
+<div class="alert alert-warning">
+  <strong>Note:</strong>`X-Credential-Username` was deprecated in favor of `X-Credential-Identifier` in Kong 2.1.
+</div>
 
 ### Paginate through the basic-auth Credentials
 
@@ -273,7 +282,7 @@ Credential for which to get the associated [Consumer][consumer-object].
 Note that the `username` accepted here is **not** the `username` property of a
 Consumer.
 
-[configuration]: /latest/configuration
-[consumer-object]: /latest/admin-api/#consumer-object
+[configuration]: /gateway-oss/latest/configuration
+[consumer-object]: /gateway-oss/latest/admin-api/#consumer-object
 [acl-associating]: /plugins/acl/#associating-consumers
 [faq-authentication]: /about/faq/#how-can-i-add-an-authentication-layer-on-a-microservice/api?

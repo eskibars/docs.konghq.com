@@ -4,10 +4,12 @@ name: Route By Header
 publisher: Kong Inc.
 version: 1.3-x
 
+
 desc: Route request based on request headers
 description: |
    Kong Enterprise plugin to route requests based on request headers.
 enterprise: true
+plus: true
 type: plugin
 categories:
   - traffic-control
@@ -17,11 +19,14 @@ kong_version_compatibility:
       compatible:
     enterprise_edition:
       compatible:
+        - 2.4.x
+        - 2.3.x
+        - 2.2.x
+        - 2.1.x
         - 1.5.x
         - 1.3-x
         - 0.36-x
-        - 0.35-x
-        - 0.34-x
+
 
 params:
   name: route-by-header
@@ -29,6 +34,7 @@ params:
   service_id: true
   route_id: true
   consumer_id: true
+  dbless_compatible: yes
   config:
     - name: rules
       required: false
@@ -46,7 +52,7 @@ params:
 | `condition` |  List of headers name and value pairs |
 | `upstream_name` |  Target hostname where traffic will be routed in case of condition match |
 
-Note: if more than one pair of header name and value is provided, the plugin looks for all of these
+Note: If more than one pair of header name and value is provided, the plugin looks for all of these
 in the request - that is, requests must contain all of the specified headers with the specified
 values for a match to occur.
 
@@ -61,7 +67,7 @@ The first such match dictates the upstream to which the request is forwarded to.
 ## Example
 
 Let's run through an example scenario to demonstrate the plugin. Let's say we have
-a Kong service `searviceA`, which routes all the requests to upstream `default.domain.com`.
+a Kong service `serviceA`, which routes all the requests to upstream `default.domain.com`.
 
 Add an upstream object and a target:
 

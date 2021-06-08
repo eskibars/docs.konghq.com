@@ -62,6 +62,7 @@ privacy_policy_url: https://www.signalsciences.com/privacy/
 kong_version_compatibility:
   community_edition:
     compatible:
+      - 2.1.x
       - 2.0.x
       - 1.5.x
       - 1.4.x
@@ -75,6 +76,9 @@ kong_version_compatibility:
       - 0.36-x
       - 0.35-x
       - 0.34-x
+
+params:
+  dbless_compatible: yes
 
 ###############################################################################
 # END YAML DATA

@@ -4,7 +4,7 @@ title: Working with Templates
 
 ### Introduction
 
-Kong Portal 1.3 is built on top of the `lua-resty-template` templating library which can be viewed here: https://github.com/bungle/lua-resty-template. Basic usage of the library will be described below, reference the source documentation for a more in-depth look at what it can accomplish.
+Kong Portal 1.3 is built on top of the `lua-resty-template` templating library which can be viewed here: [https://github.com/bungle/lua-resty-template](https://github.com/bungle/lua-resty-template). Basic usage of the library will be described below, reference the source documentation for a more in-depth look at what it can accomplish.
 
 ### Syntax
 ***(excerpt from lua-resty-templates documentation)***
@@ -509,7 +509,7 @@ string
 
 {% raw %}
 ```lua
-<pre>{* markdown(page.description) *)</pre>
+<pre>{* markdown(page.description) *}</pre>
 ```
 {% endraw %}
 

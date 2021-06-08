@@ -1,25 +1,16 @@
 ---
 name: HMAC Authentication
 publisher: Kong Inc.
-version: 1.0.0
+version: 2.2.0
 
 desc: Add HMAC Authentication to your Services
 description: |
   Add HMAC Signature authentication to a Service or a Route
-  to establish the integrity of incoming requests. The plugin will validate the
+  to establish the integrity of incoming requests. The plugin validates the
   digital signature sent in the `Proxy-Authorization` or `Authorization` header
-  (in this order). This plugin implementation is based off the
+  (in that order). This plugin implementation is based off the
   [draft-cavage-http-signatures](https://tools.ietf.org/html/draft-cavage-http-signatures)
   draft with a slightly different signature scheme.
-
-  <div class="alert alert-warning">
-    <strong>Note:</strong> The functionality of this plugin as bundled
-    with versions of Kong prior to 0.14.0 and Kong Enterprise prior to 0.34
-    differs from what is documented herein. Refer to the
-    <a href="https://github.com/Kong/kong/blob/master/CHANGELOG.md">CHANGELOG</a>
-    for details.
-  </div>
-
 
 type: plugin
 categories:
@@ -28,8 +19,12 @@ categories:
 kong_version_compatibility:
     community_edition:
       compatible:
+        - 2.4.x
+        - 2.3.x
+        - 2.2.x
+        - 2.1.x
         - 2.0.x
-        - 1.5.x      
+        - 1.5.x
         - 1.4.x
         - 1.3.x
         - 1.2.x
@@ -47,60 +42,65 @@ kong_version_compatibility:
         - 0.5.x
     enterprise_edition:
       compatible:
+        - 2.4.x
+        - 2.3.x
+        - 2.2.x
+        - 2.1.x
         - 1.5.x
         - 1.3-x
         - 0.36-x
-        - 0.35-x
-        - 0.34-x
-        - 0.33-x
-        - 0.32-x
-        - 0.31-x
 
 params:
   name: hmac-auth
   service_id: true
   route_id: true
   consumer_id: false
-  protocols: ["http", "https"]
+  protocols: ["http", "https", "grpc", "grpcs"]
   dbless_compatible: partially
   dbless_explanation: |
     Consumers and Credentials can be created with declarative configuration.
-
-    Admin API endpoints which do POST, PUT, PATCH or DELETE on Credentials will not work on DB-less mode.
+    
+    Admin API endpoints that do POST, PUT, PATCH or DELETE on Credentials will not work on DB-less mode.
   config:
     - name: hide_credentials
       required: false
       default: "`false`"
+      datatype: boolean
       description: |
-        An optional boolean value telling the plugin to show or hide the credential from the upstream service. If `true`, the plugin will strip the credential from the request (i.e. the `Authorization` header) before proxying it.
+        An optional boolean value telling the plugin to show or hide the credential from the upstream service. If `true`, the plugin strips the credential from the request (i.e. the `Authorization` header) before proxying it.
     - name: clock_skew
       required: false
       default: "`300`"
+      datatype: number
       description: |
         [Clock Skew](https://tools.ietf.org/html/draft-cavage-http-signatures-00#section-3.4) in seconds to prevent replay attacks.
     - name: anonymous
       required: false
       default:
+      datatype: string
       description: |
-        An optional string (consumer uuid) value to use as an "anonymous" consumer if authentication fails. If empty (default), the request will fail with an authentication failure `4xx`. Please note that this value must refer to the Consumer `id` attribute which is internal to Kong, and **not** its `custom_id`.
+        An optional string (consumer UUID) value to use as an anonymous consumer if authentication fails. If empty (default), the request fails with an authentication failure `4xx`. Please note that this value must refer to the Consumer `id` attribute which is internal to Kong, and **not** its `custom_id`.
     - name: validate_request_body
-      required: false
+      required: true
       default: "`false`"
-      description: A boolean value telling the plugin to enable body validation
+      datatype: boolean
+      description: A boolean value telling the plugin to enable body validation.
     - name: enforce_headers
       required: false
       default:
-      description: A list of headers which the client should at least use for HTTP signature creation
+      datatype: array of string elements
+      description: A list of headers that the client should at least use for HTTP signature creation.
     - name: algorithms
       required: false
       default: "`hmac-sha1`,<br>`hmac-sha256`,<br>`hmac-sha384`,<br>`hmac-sha512`"
+      datatype: array of string elements
       description: |
-        A list of HMAC digest algorithms which the user wants to support. Allowed values are `hmac-sha1`, `hmac-sha256`, `hmac-sha384`, and `hmac-sha512`
+        A list of HMAC digest algorithms that the user wants to support. Allowed values are `hmac-sha1`, `hmac-sha256`, `hmac-sha384`, and `hmac-sha512`
   extra: |
     Once applied, any user with a valid credential can access the Service/Route.
     To restrict usage to only some of the authenticated users, also add the
-    [ACL](/plugins/acl/) plugin (not covered here) and create whitelist or
-    blacklist groups of users.
+    [ACL](/plugins/acl/) plugin (not covered here) and create allowed or
+    denied groups of users.
 
 ---
 
@@ -117,14 +117,15 @@ update or remove any request parameter used in HMAC signature before this plugin
 You need to associate a credential to an existing [Consumer][consumer-object] object.
 A Consumer can have many credentials.
 
-{% tabs %}
-{% tab With a Database %}
+{% navtabs %}
+{% navtab With a Database %}
 To create a Consumer, you can execute the following request:
 
 ```bash
 curl -d "username=user123&custom_id=SOME_CUSTOM_ID" http://kong:8001/consumers/
 ```
-{% tab Without a Database %}
+{% endnavtab %}
+{% navtab Without a Database %}
 Your declarative configuration file will need to have one or more Consumers. You can create them
 on the `consumers:` yaml section:
 
@@ -133,7 +134,8 @@ consumers:
 - username: user123
   custom_id: SOME_CUSTOM_ID
 ```
-{% endtabs %}
+{% endnavtab %}
+{% endnavtabs %}
 
 In both cases, the parameters are as described below:
 
@@ -144,8 +146,9 @@ parameter                       | description
 
 ### Create a Credential
 
-{% tabs %}
-{% tab With a database %}
+{% navtabs %}
+{% navtab With a database %}
+
 You can provision new username/password credentials by making the following
 HTTP request:
 
@@ -154,19 +157,22 @@ $ curl -X POST http://kong:8001/consumers/{consumer}/hmac-auth \
     --data "username=bob" \
     --data "secret=secret456"
 ```
+{% endnavtab %}
 
-{% tab Without a database %}
+{% navtab Without a database %}
+
 You can add credentials on your declarative config file on the `hmacauth_credentials` yaml entry:
 
-``` yaml
+```yaml
 hmacauth_credentials:
 - consumer: {consumer}
   username: bob
   secret: secret456
 ```
-{% endtabs %}
+{% endnavtab %}
+{% endnavtabs %}
 
-In both cases the fields/parameters work as follows:
+In both cases, the fields/parameters work as follows:
 
 field/parameter            | description
 ---                        | ---
@@ -393,20 +399,20 @@ can identify the Consumer in your code:
 * `X-Consumer-ID`, the ID of the Consumer on Kong
 * `X-Consumer-Custom-ID`, the `custom_id` of the Consumer (if set)
 * `X-Consumer-Username`, the `username` of the Consumer (if set)
-* `X-Credential-Username`, the `username` of the Credential (only if the consumer is not the 'anonymous' consumer)
+* `X-Credential-Identifier`, the identifier of the Credential (only if the consumer is not the 'anonymous' consumer)
 * `X-Anonymous-Consumer`, will be set to `true` when authentication failed, and the 'anonymous' consumer was set instead.
 
 You can use this information on your side to implement additional logic.
 You can use the `X-Consumer-ID` value to query the Kong Admin API and retrieve
 more information about the Consumer.
 
-### Paginate through the HMAC Credentials
-
 <div class="alert alert-warning">
-  <strong>Note:</strong> This endpoint was introduced in Kong 0.11.2.
+  <strong>Note:</strong>`X-Credential-Username` was deprecated in favor of `X-Credential-Identifier` in Kong 2.1.
 </div>
 
-You can paginate through the hmac-auth Credentials for all Consumers using the
+### Paginate through the HMAC credentials
+
+Paginate through the `hmac-auth` Credentials for all Consumers using the
 following request:
 
 ```bash
@@ -463,10 +469,6 @@ $ curl -X GET http://kong:8001/consumers/{username or id}/hmac-auth
 
 ### Retrieve the Consumer associated with a Credential
 
-<div class="alert alert-warning">
-  <strong>Note:</strong> This endpoint was introduced in Kong 0.11.2.
-</div>
-
 It is possible to retrieve a [Consumer][consumer-object] associated with an
 HMAC Credential using the following request:
 
@@ -485,5 +487,5 @@ for which to get the associated [Consumer][consumer-object].
 Note that `username` accepted here is **not** the `username` property of a
 Consumer.
 
-[consumer-object]: /latest/admin-api/#consumer-object
+[consumer-object]: /gateway-oss/latest/admin-api/#consumer-object
 [clock-skew]: https://tools.ietf.org/html/draft-cavage-http-signatures-00#section-3.4

@@ -38,6 +38,7 @@ kong_version_compatibility:
       - 1.4.x
       - 1.5.x
       - 2.0.x
+      - 2.1.x
   enterprise_edition:
     compatible:
       - 0.33-x
@@ -53,6 +54,7 @@ params:
   service_id: false
   consumer_id: false
   route_id: true
+  dbless_compatible: yes
   config:
     - name: api_address
       required: yes

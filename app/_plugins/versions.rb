@@ -6,33 +6,62 @@ module Jekyll
 
     def generate(site)
       ceVersions = site.data["kong_versions"].select do |elem|
-        elem["edition"] && elem["edition"] == "community"
+        elem["edition"] && elem["edition"] == 'gateway-oss'
       end
 
       eeVersions = site.data["kong_versions"].select do |elem|
-        elem["edition"] && elem["edition"] == "enterprise"
-      end
-
-      studioVersions = site.data["kong_versions"].select do |elem|
-        elem["edition"] && elem["edition"] == 'studio'
+        elem["edition"] && elem["edition"] == 'enterprise'
       end
 
       gsgVersions = site.data["kong_versions"].select do |elem|
         elem["edition"] && elem["edition"] == 'getting-started-guide'
       end
 
-      site.data["kong_versions"] = ceVersions
+      deckVersions = site.data["kong_versions"].select do |elem|
+        elem["edition"] && elem["edition"] == 'deck'
+      end
+
+      meshVersions = site.data["kong_versions"].select do |elem|
+        elem["edition"] && elem["edition"] == 'mesh'
+      end
+
+      konnectVersions = site.data["kong_versions"].select do |elem|
+        elem["edition"] && elem["edition"] == 'konnect'
+      end
+
+      konnectPlatformVersions = site.data["kong_versions"].select do |elem|
+        elem["edition"] && elem["edition"] == 'konnect-platform'
+      end
+
+      kicVersions = site.data["kong_versions"].select do |elem|
+        elem["edition"] && elem["edition"] == 'kubernetes-ingress-controller'
+      end
+
+      site.data["kong_versions_ce"] = ceVersions
       site.data["kong_versions_ee"] = eeVersions
-      site.data["kong_versions_studio"] = studioVersions
       site.data["kong_versions_gsg"] = gsgVersions
+      site.data["kong_versions_deck"] = deckVersions
+      site.data["kong_versions_mesh"] = meshVersions
+      site.data["kong_versions_konnect"] = konnectVersions
+      site.data["kong_versions_konnect_platform"] = konnectPlatformVersions
+      site.data["kong_versions_kic"] = kicVersions
+
 
       # Retrieve the latest version and put it in `site.data.kong_latest.version`
-      latestVersion = ceVersions.last
+      latestVersionCE = ceVersions.last
       latestVersionEE = eeVersions.last
-      latestVersionStudio = studioVersions.last
       latestVersionGSG = gsgVersions.last
+      latestVersionDeck = deckVersions.last
+      latestVersionMesh = meshVersions.last
+      latestVersionKonnect = konnectVersions.last
+      latestVersionKonnectPlatform = konnectPlatformVersions.last
+      latestVersionKIC = kicVersions.last
 
-      site.data["kong_latest"] = latestVersion
+      site.data["kong_latest"] = latestVersionCE
+      site.data["kong_latest_ee"] = latestVersionEE
+      site.data["kong_latest_mesh"] = latestVersionMesh
+      site.data["kong_latest_gsg"] = latestVersionGSG
+      site.data["kong_latest_KIC"] = latestVersionKIC
 
       # Add a `version` property to every versioned page
       # Also create aliases under /latest/ for all x.x.x doc pages
@@ -40,7 +69,7 @@ module Jekyll
         parts = Pathname(page.path).each_filename.to_a
         page.data["has_version"] = true
         # Only apply those rules to documentation pages
-        if (parts[0] == "enterprise" || parts[0].match(/[0-3]\.[0-9]{1,2}(\..*)?$/) || parts[0] == 'studio' || parts[0] == 'getting-started-guide' || parts[0] == 'community')
+        if (parts[0] == "enterprise" || parts[0].match(/[0-3]\.[0-9]{1,2}(\..*)?$/) || parts[0] == 'getting-started-guide' || parts[0] == 'mesh' || parts[0] == 'deck' || parts[0] == 'konnect' || parts[0] == 'konnect-platform' || parts[0] == 'kubernetes-ingress-controller' || parts[0] == 'gateway-oss')
           if(parts[0] == 'enterprise')
             page.data["edition"] = parts[0]
             page.data["kong_version"] = parts[1]
@@ -48,13 +77,6 @@ module Jekyll
             page.data["kong_latest"] = latestVersionEE
             page.data["nav_items"] = site.data['docs_nav_ee_' + parts[1].gsub(/\./, '')]
             createAliases(page, '/enterprise', 1, parts, latestVersionEE["release"])
-          elsif(parts[0] == 'studio')
-            page.data["edition"] = parts[0]
-            page.data["kong_version"] = parts[1]
-            page.data["kong_versions"] = studioVersions
-            page.data["kong_latest"] = latestVersionStudio
-            page.data["nav_items"] = site.data['docs_nav_studio_' + parts[1].gsub(/\./, '')]
-            createAliases(page, '/studio', 1, parts, latestVersionStudio["release"])
           elsif(parts[0] == 'getting-started-guide')
             page.data["edition"] = parts[0]
             page.data["kong_version"] = parts[1]
@@ -62,13 +84,48 @@ module Jekyll
             page.data["kong_latest"] = latestVersionGSG
             page.data["nav_items"] = site.data['docs_nav_gsg_' + parts[1].gsub(/\./, '')]
             createAliases(page, '/getting-started-guide', 1, parts, latestVersionGSG["release"])
-          else
-            page.data["edition"] = "community"
-            page.data["kong_version"] = parts[0]
+          elsif(parts[0] == 'mesh')
+            page.data["edition"] = parts[0]
+            page.data["kong_version"] = parts[1]
+            page.data["kong_versions"] = meshVersions
+            page.data["kong_latest"] = latestVersionMesh
+            page.data["nav_items"] = site.data['docs_nav_mesh_' + parts[1].gsub(/\./, '')]
+            createAliases(page, '/mesh', 1, parts, latestVersionMesh["release"])
+          elsif(parts[0] == 'konnect')
+            page.data["edition"] = parts[0]
+            page.data["kong_version"] = parts[1]
+            page.data["kong_versions"] = konnectVersions
+            page.data["kong_latest"] = latestVersionKonnect
+            page.data["nav_items"] = site.data['docs_nav_konnect']
+            createAliases(page, '/konnect', 1, parts, latestVersionKonnect["release"])
+          elsif(parts[0] == 'konnect-platform')
+            page.data["edition"] = parts[0]
+            page.data["kong_version"] = parts[1]
+            page.data["kong_versions"] = konnectPlatformVersions
+            page.data["kong_latest"] = latestVersionKonnectPlatform
+            page.data["nav_items"] = site.data['docs_nav_konnect_platform']
+            createAliases(page, '/konnect-platform', 1, parts, latestVersionKonnectPlatform["release"])
+          elsif(parts[0] == 'kubernetes-ingress-controller')
+            page.data["edition"] = parts[0]
+            page.data["kong_version"] = parts[1]
+            page.data["kong_versions"] = kicVersions
+            page.data["kong_latest"] = latestVersionKIC
+            page.data["nav_items"] = site.data['docs_nav_kic_' + parts[1].gsub(/\./, '')]
+            createAliases(page, '/kubernetes-ingress-controller', 1, parts, latestVersionKIC["release"])
+          elsif(parts[0] == 'deck')
+            page.data["edition"] = parts[0]
+            page.data["kong_version"] = parts[1]
+            page.data["kong_versions"] = deckVersions
+            page.data["kong_latest"] = latestVersionDeck
+            page.data["nav_items"] = site.data['docs_nav_deck']
+            createAliases(page, '/deck', 1, parts, latestVersionDeck["release"])
+          elsif(parts[0] == 'gateway-oss')
+            page.data["edition"] = parts[0]
+            page.data["kong_version"] = parts[1]
             page.data["kong_versions"] = ceVersions
-            page.data["kong_latest"] = latestVersion
-            page.data["nav_items"] = site.data['docs_nav_' + parts[0].gsub(/\./, '')]
-            createAliases(page, '', 0, parts, latestVersion["release"])
+            page.data["kong_latest"] = latestVersionCE
+            page.data["nav_items"] = site.data['docs_nav_ce_' + parts[1].gsub(/\./, '')]
+            createAliases(page, '/gateway-oss', 1, parts, latestVersionCE["release"])
           end
 
 

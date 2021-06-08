@@ -1,7 +1,7 @@
 ---
 name: Session
 publisher: Kong Inc.
-version: 2.2.0-x
+version: 2.4.4-x
 redirect_from:
   - /hub/kong-in/sessions
   - /hub/kong-inc/sessions
@@ -26,6 +26,10 @@ source_url: https://github.com/Kong/kong-plugin-session
 kong_version_compatibility:
   community_edition:
     compatible:
+      - 2.4.x
+      - 2.3.x
+      - 2.2.x     
+      - 2.1.x
       - 2.0.x
       - 1.5.x
       - 1.4.x
@@ -33,97 +37,143 @@ kong_version_compatibility:
       - 1.2.x
   enterprise_edition:
     compatible:
+      - 2.4.x
+      - 2.3.x
+      - 2.2.x
+      - 2.1.x
       - 1.5.x
       - 1.3-x
       - 0.36-x
-      - 0.35-x
+
 
 params:
   name: session
   service_id: true
   route_id: true
   consumer_id: false
+  dbless_compatible: partially
+  dbless_explanation: |
+    `config.storage` must be set to `cookie`. The `kong` strategy uses
+    a database, and is not supported. The plugin currently lacks checks
+    for this invalid configuration in DB-less mode.
   config:
     - name: secret
       required: false
       default: random number generated from `kong.utils.random_string`
       value_in_examples: opensesame
+      datatype: string
       description: The secret that is used in keyed HMAC generation.​
     - name: cookie_name
       required: false
       default: '`session`'
-      description: The name of the cookie
+      datatype: string
+      description: The name of the cookie.
     - name: cookie_lifetime
       required: false
       default: 3600
-      description: The duration (in seconds) that the session will remain open
+      datatype: number
+      description: The duration in seconds that the session will remain open.
+    - name: cookie_idletime
+      required: false
+      datatype: number
+      description: |
+        The cookie idle time (in seconds); if a cookie is not used for this time
+        period, the session becomes invalid. This value is not set by default,
+        meaning idle time checks are disabled.
     - name: cookie_renew
       required: false
       default: 600
-      description: The duration (in seconds) of a session remaining at which point the Plugin renews the session
+      datatype: number
+      description: The remaining duration in seconds of a session at which point the Plugin renews the session.
     - name: cookie_path
       required: false
       default: '/'
-      description: The resource in the host where the cookie is available
+      datatype: string
+      description: The resource in the host where the cookie is available.
     - name: cookie_domain
       required: false
       default: Set using Nginx variable host, but may be overridden
-      description: The domain with which the cookie is intended to be exchanged
+      datatype: string
+      description: The domain with which the cookie is intended to be exchanged.
     - name: cookie_samesite
       required: false
       default: 'Strict'
-      description: 'Determines whether and how a cookie may be sent with cross-site requests. "Strict": the browser will send cookies only if the request originated from the website that set the cookie. "Lax": same-site cookies are withheld on cross-domain subrequests, but will be sent when a user navigates to the URL from an external site, for example, by following a link. "off": disables the same-site attribute so that a cookie may be sent with cross-site requests. https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies#SameSite_cookies'
+      datatype: string
+      description: |
+        Determines whether and how a cookie may be sent with cross-site requests. `Strict`:
+        The browser will send cookies only if the request originated from the website that set the cookie.
+        `Lax`: Same-site cookies are withheld on cross-domain subrequests, but will be sent when a user navigates
+        to the URL from an external site, for example, by following a link. `None` or `off`: Disables
+        the same-site attribute so that a cookie may be sent with cross-site requests. `None` requires
+        the Secure attribute (`cookie_secure`) in latest browser versions. For more info, see the
+        [SameSite cookies docs on MDN](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie/SameSite).'
     - name: cookie_httponly
       required: false
       default: true
-      description: Applies the `HttpOnly` tag so that the cookie is sent only to a server https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies#Secure_and_HttpOnly_cookies
+      datatype: boolean
+      description: |
+        Applies the `HttpOnly` tag so that the cookie is sent only to a server. See the
+        [Restrict access to cookies docs on MDN](https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies#Restrict_access_to_cookies).
     - name: cookie_secure
       required: false
       default: true
-      description: Applies the Secure directive so that the cookie may be sent to the server only with an encrypted request over the HTTPS protocol https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies#Secure_and_HttpOnly_cookies
+      datatype: boolean
+      description: |
+        Applies the Secure directive so that the cookie may be sent to the server only with an encrypted
+        request over the HTTPS protocol. See the
+        [Restrict access to cookies docs on MDN](https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies#Restrict_access_to_cookies).
     - name: cookie_discard
       required: false
       default: 10
-      description: The duration (in seconds) after which an old session’s TTL is updated that an old cookie is discarded.
+      datatype: number
+      description: The duration in seconds after which an old session’s TTL is updated that an old cookie is discarded.
     - name: storage
       required: false
       default: 'cookie'
-      description: "Determines where the session data is stored. `kong`: stores encrypted session data into Kong's current database strategy (e.g. Postgres, Cassandra); the cookie will not contain any session data. `cookie`: stores encrypted session data within the cookie itself."
+      datatype: string
+      description: |
+        Determines where the session data is stored. `kong`: Stores encrypted session data into Kong's current database
+        strategy (e.g. Postgres, Cassandra); the cookie will not contain any session data. `cookie`: Stores encrypted
+        session data within the cookie itself.
     - name: logout_methods
       required: false
       default: '[`"POST"`, `"DELETE"`]'
-      description: 'The methods that may be used to end sessions: POST, DELETE, GET.'
+      datatype: array of string elements
+      description: |
+        The methods that may be used to end sessions: POST, DELETE, GET.
     - name: logout_query_arg
       required: false
       default: session_logout
+      datatype: string
       description: The query argument passed to logout requests.
     - name: logout_post_arg
       required: false
       default: session_logout
-      description: The post argument passed to logout requests. Do not change this property.
+      datatype: string
+      description: The POST argument passed to logout requests. Do not change this property.
 ---
 
 ## Usage
 
 The Kong Session **Plugin** can be configured globally or per entity (e.g., Service, Route)
-and is always used in conjunction with another Kong Authentication **[Plugin]**. This
+and is always used in conjunction with another Kong Authentication [Plugin]. This
 **Plugin** is intended to work similarly to the [multiple authentication] setup.
 
-Once the Kong Session **Plugin** is enabled in conjunction with an Authentication **Plugin**,
+After the Kong Session **Plugin** is enabled in conjunction with an Authentication **Plugin**,
 it will run prior to credential verification. If no session is found, then the
 authentication **Plugin** will run and credentials will be checked as normal. If the
 credential verification is successful, then the session **Plugin** will create a new
 session for usage with subsequent requests.
 
-When a new request comes in, and a session is present, then the Kong Session
+When a new request comes in, and a session is already present, then the Kong Session
 **Plugin** will attach the `ngx.ctx` variables to let the authentication
-**Plugin** know that authentication has already occured via session validation.
-Since this configuration is a logical OR scenario, it is desired that anonymous
+**Plugin** know that authentication has already occurred via session validation.
+Because this configuration is a logical OR scenario, and it is desired that anonymous
 access be forbidden, then the [Request Termination] **Plugin** should be
 configured on an anonymous consumer. Failure to do so will allow unauthorized
-requests. For more information please see section on [multiple authentication].
+requests. For more information, see [multiple authentication].
 
-### Setup With a Database
+### Set up With a Database
 
 For usage with [Key Auth] **Plugin**
 
@@ -147,7 +197,7 @@ For usage with [Key Auth] **Plugin**
      --data 'paths[]=/sessions-test'
    ```
 
-   The url `http://localhost:8000/sessions-test` will now echo whatever is being
+   The URL `http://localhost:8000/sessions-test` will now echo whatever is being
    requested.
 
 1. Configure the key-auth **Plugin** for the Service
@@ -160,7 +210,7 @@ For usage with [Key Auth] **Plugin**
      --data 'name=key-auth'
    ```
 
-   Be sure to note the created **Plugin** `id` - it will be needed later.
+   Be sure to note the created **Plugin** `id` - you will need it later.
 
 1. Verify that the key-auth **Plugin** is properly configured
 
@@ -173,7 +223,7 @@ For usage with [Key Auth] **Plugin**
    ```
 
    Since the required header or parameter `apikey` was not specified, and
-   anonymous access was not yet enabled, the response should be `401 Unauthorized`:
+   anonymous access was not yet enabled, the response should be `401 Unauthorized`.
 
 1. Create a Consumer and an anonymous Consumer
 
@@ -187,9 +237,9 @@ For usage with [Key Auth] **Plugin**
      --data "username=anonymous_users"
    ```
 
-   Be sure to note the Consumer `id` - you'll need it in a later step.
+   Be sure to note the Consumer `id` - you will need it later.
 
-   Now create a consumer that will authenticate via sessions
+   Now create a consumer that will authenticate via sessions:
 
    ```bash
    $ curl -i -X POST \
@@ -197,7 +247,7 @@ For usage with [Key Auth] **Plugin**
      --data "username=fiona"
    ```
 
-1. Provision key-auth credentials for your Consumer
+1. Provision `key-auth` credentials for your Consumer
 
    ```bash
    $ curl -i -X POST \
@@ -208,7 +258,7 @@ For usage with [Key Auth] **Plugin**
 1. Enable anonymous access
 
    You'll now re-configure the key-auth **Plugin** to permit anonymous access by
-   issuing the following request (**replace the uuids below by the `id` value
+   issuing the following request (**replace the uuids below with the `id` value
    from previous steps**):
 
    ```bash
@@ -227,7 +277,7 @@ For usage with [Key Auth] **Plugin**
    ```
 
    > Note: cookie_secure is true by default, and should always be true, but is set to
-   > false for the sake of this demo in order to avoid using HTTPS.
+   > false for the sake of this demo to avoid using HTTPS.
 
 1. Add the Request Termination **Plugin**
 
@@ -242,7 +292,7 @@ For usage with [Key Auth] **Plugin**
        --data "consumer.id=<anonymous_consumer_id>"
    ```
 
-### Setup Without a Database
+### Set up Without a Database
 
 Add all these to the declarative config file:
 
@@ -288,7 +338,7 @@ plugins:
 
 ### Verification
 
-1. Check that Anonymous requests are disabled
+1. Check that Anonymous requests are disabled:
 
    ```bash
      $ curl -i -X GET \
@@ -322,14 +372,14 @@ plugins:
    ```
 
    This request should succeed, and `Set-Cookie` response header will not appear
-   until renewal period.
+   until the renewal period.
 
-3. You can also now verify cookie is attached to browser session: Navigate to
-   http://localhost:8000/sessions-test which should return `403`
+3. You can also now verify cookie is attached to the browser session: Navigate to
+   `http://localhost:8000/sessions-test`, which should return `403`
    and see the message "So long and thanks for all the fish!"
-4. In same browser session, navigate to http://localhost:8000/sessions-test?apikey=open_sesame
-   which should return `200`, authenticated via key-auth key query param.
-5. In same browser session, navigate to http://localhost:8000/sessions-test,
+4. In the same browser session, navigate to `http://localhost:8000/sessions-test?apikey=open_sesame`,
+   which should return `200`, authenticated via `key-auth` key query param.
+5. In the same browser session, navigate to `http://localhost:8000/sessions-test`,
    which will now use the session cookie that was granted by the Kong Session
    **Plugin**.
 
@@ -365,22 +415,22 @@ plugins, it will also set `authenticated_groups` associated headers.
 
 The Kong Session **Plugin** extends the functionality of [lua-resty-session] with its own
 session data storage adapter when `storage=kong`. This will store encrypted
-session data into the current database strategy (e.g. postgres, cassandra etc.)
+session data into the current database strategy (e.g., Postgres, Cassandra, etc.)
 and the cookie will not contain any session data. Data stored in the database is
-encrypted and the cookie will contain only the session id, expiration time and
-HMAC signature. Sessions will use the built-in Kong DAO `ttl` mechanism which destroys
+encrypted and the cookie will contain only the session id, expiration time, and
+HMAC signature. Sessions will use the built-in Kong DAO `ttl` mechanism that destroys
 sessions after specified `cookie_lifetime` unless renewal occurs during normal
 browser activity. It is recommended that the application logout via XHR request
 (or something similar) to manually handle redirects.
 
 ## Logging Out
 
-It is typical to provide users the ability to log out (i.e. to manually destroy) their
+It is typical to provide users the ability to log out (i.e., to manually destroy) their
 current session. Logging out is possible with either query params or `POST` params in
 the request URL. The config's `logout_methods` allows the **Plugin** to limit logging
 out based on the HTTP verb. When `logout_query_arg` is set, it will check the
 presence of the URL query param specified, and likewise when `logout_post_arg`
-is set it will check the presence of the specified variable in the request body.
+is set, it will check the presence of the specified variable in the request body.
 Allowed HTTP verbs are `GET`, `DELETE`, and `POST`. When there is a session
 present and the incoming request is a logout request, the Kong Session **Plugin** will
 return a 200 before continuing in the **Plugin** run loop, and the request will not
@@ -389,11 +439,11 @@ continue to the upstream.
 ## Known Limitations
 
 Due to limitations of OpenResty, the `header_filter` phase cannot connect to the
-database, which poses a problem for initial retrieval of cookie (fresh session).
-There is a small window of time where cookie is sent to client, but database
-insert has not yet been committed, as database call is in `ngx.timer` thread.
+database, which poses a problem for initial retrieval of a cookie (fresh session).
+There is a small window of time where the cookie is sent to client, but the database
+insert has not yet been committed because the database call is in a `ngx.timer` thread.
 Current workaround is to wait some interval of time (~100-500ms) after
-`Set-Cookie` header is sent to client before making subsequent requests. This is
+`Set-Cookie` header is sent to the client before making subsequent requests. This is
 _not_ a problem during session renewal period as renew happens in `access` phase.
 
 [plugin]: https://docs.konghq.com/hub/

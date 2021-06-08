@@ -26,6 +26,7 @@ license_type: MIT
 kong_version_compatibility:
   community_edition:
     compatible:
+      - 2.1.x
       - 2.0.x
       - 1.5.x
       - 1.4.x
@@ -52,7 +53,7 @@ params:
     # List of protocols this plugin is compatible with.
     # Valid values: "http", "https", "tcp", "tls"
     # Example: ["http", "https"]
-  dbless_compatible: true
+  dbless_compatible: yes
     # Degree of compatibility with DB-less mode. Three values allowed:
     # 'yes', 'no' or 'partially'
   dbless_explanation: Fully compatible with DB and DB-less (K8s, Declarative) Kong implementations.

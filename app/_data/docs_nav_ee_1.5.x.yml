@@ -25,24 +25,30 @@
     - text: Installation
       url: /deployment/installation/overview
       items:
-        - text: Docker
-          url: /deployment/installation/docker
-        - text: Kong for Kubernetes Enterprise
-          url: /kong-for-kubernetes/install
-        - text: Kong Enterprise on Kubernetes
-          url: /kong-for-kubernetes/install-on-kubernetes
-        - text: Ubuntu
-          url: /deployment/installation/ubuntu
-        - text: CentOS
-          url: /deployment/installation/centos
-        - text: Amazon Linux 1
-          url: /deployment/installation/amazon-linux
-        - text: Amazon Linux 2
-          url: /deployment/installation/amazon-linux-2
-        - text: Red Hat Enterprise Linux
-          url: /deployment/installation/rhel
-        - text: OpenShift
-          url: /kong-for-kubernetes/install
+        - text: Containerized
+          items:
+            - text: Docker
+              url: /deployment/installation/docker
+            - text: Kong for Kubernetes Enterprise
+              url: /kong-for-kubernetes/install
+            - text: Kong Enterprise on Kubernetes
+              url: /kong-for-kubernetes/install-on-kubernetes
+            - text: OpenShift with Kong for Kubernetes Enterprise
+              url: /kong-for-kubernetes/install
+            - text: OpenShift with Kong Enterprise on Kubernetes
+              url: /kong-for-kubernetes/install-on-kubernetes
+        - text: Operating Systems
+          items:
+            - text: Ubuntu
+              url: /deployment/installation/ubuntu
+            - text: CentOS
+              url: /deployment/installation/centos
+            - text: Amazon Linux 1
+              url: /deployment/installation/amazon-linux
+            - text: Amazon Linux 2
+              url: /deployment/installation/amazon-linux-2
+            - text: Red Hat Enterprise Linux
+              url: /deployment/installation/rhel
     - text: Default Ports
       url: /deployment/default-ports
     - text: DNS Considerations
@@ -315,6 +321,8 @@
       url: /developer-portal/legacy-migration
     - text: Structure and File Types
       url: /developer-portal/structure-and-file-types
+    - text: Using the Portal Files API
+      url: /developer-portal/files-api
     - text: Working with Templates
       url: /developer-portal/working-with-templates
     - text: Using the Editor
@@ -406,16 +414,25 @@
 
 - title: Kong Brain & Kong Immunity
   icon: /assets/images/icons/documentation/icn-brain-color.svg
-  url: /brain-immunity/install-configure
   items:
+    - text: Overview
+      url: /brain-immunity/overview
     - text: Installation and Configuration
       url: /brain-immunity/install-configure
-    - text: Alerts
-      url: /brain-immunity/alerts
-    - text: Auto-Generated API Documentation
-      url: /brain-immunity/auto-generated-specs
-    - text: Service Map
-      url: /brain-immunity/service-map
+    - text: Kong Brain
+      items:
+        - text: Service Map
+          url: /brain-immunity/service-map
+        - text: Auto-Generated API Documentation
+          url: /brain-immunity/auto-generated-specs
+    - text: Kong Immunity
+      items:
+        - text: Alerts
+          url: /brain-immunity/alerts
+        - text: Model Training
+          url: /brain-immunity/model-training
+        - text: Slack Integration
+          url: /brain-immunity/slack-integration
     - text: Troubleshooting
       url: /brain-immunity/troubleshooting
     - text: Changelog

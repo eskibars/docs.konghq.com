@@ -3,9 +3,15 @@ name: ACL
 publisher: Kong Inc.
 version: 1.0.0
 
-desc: Control which consumers can access Services
+desc: Control which Consumers can access Services
 description: |
-  Restrict access to a Service or a Route by whitelisting or blacklisting consumers using arbitrary ACL group names. This plugin requires an [authentication plugin](/about/faq/#how-can-i-add-authentication-to-a-microservice-api) to have been already enabled on the Service or Route.
+  Restrict access to a Service or a Route by adding Consumers to allowed or
+  denied lists using arbitrary ACL group names. This plugin requires an
+  [authentication plugin](/hub/#authentication) (such as
+  [Basic Authentication](/hub/kong-inc/basic-auth/),
+  [Key Authentication](/hub/kong-inc/key-auth/), [OAuth 2.0](/hub/kong-inc/oauth2/),
+  and [OpenID Connect](/hub/kong-inc/openid-connect/))
+  to have been already enabled on the Service or Route.
 
   <div class="alert alert-warning">
     <strong>Note:</strong> The functionality of this plugin as bundled
@@ -22,8 +28,12 @@ categories:
 kong_version_compatibility:
     community_edition:
       compatible:
+        - 2.4.x
+        - 2.3.x
+        - 2.2.x
+        - 2.1.x
         - 2.0.x
-        - 1.5.x      
+        - 1.5.x
         - 1.4.x
         - 1.3.x
         - 1.2.x
@@ -39,21 +49,16 @@ kong_version_compatibility:
         - 0.7.x
         - 0.6.x
         - 0.5.x
-#      incompatible:
-#        - 0.4.x
-#        - 0.3.x
-#        - 0.2.x
     enterprise_edition:
       compatible:
+        - 2.4.x
+        - 2.3.x
+        - 2.2.x
+        - 2.1.x
         - 1.5.x
         - 1.3-x
         - 0.36-x
-        - 0.35-x
-        - 0.34-x
-        - 0.33-x
-        - 0.32-x
-        - 0.31-x
-#      incompatible:
+
 
 params:
   name: acl
@@ -64,52 +69,60 @@ params:
   dbless_compatible: partially
   dbless_explanation: |
     Consumers and ACLs can be created with declarative configuration.
-
-    Admin API endpoints which do POST, PUT, PATCH or DELETE on ACLs will not work on DB-less mode.
+    
+    Admin API endpoints that do POST, PUT, PATCH or DELETE on ACLs will not work on DB-less mode.
   config:
-    - name: whitelist
+    - name: allow
       required: semi
       default:
       value_in_examples: [ "group1", "group2" ]
+      datatype: array of string elements
       description: |
-        Arbitrary group names that are allowed to consume the Service or Route. One of `config.whitelist` or `config.blacklist` must be specified.
-    - name: blacklist
+        Arbitrary group names that are allowed to consume the Service or Route. One of `config.allow` or `config.deny` must be specified.
+    - name: deny
       required: semi
       default:
+      datatype: array of string elements
       description: |
-        Arbitrary group names that are not allowed to consume the Service or Route. One of `config.whitelist` or `config.blacklist` must be specified.
+        Arbitrary group names that are not allowed to consume the Service or Route. One of `config.allow` or `config.deny` must be specified.
     - name: hide_groups_header
-      required: false
+      required: true
       default: false
       value_in_examples: true
+      datatype: boolean
       description: |
-        Flag which if enabled (`true`), prevents the `X-Consumer-Groups` header to be sent in the request to the upstream service.
+        Flag that if enabled (`true`), prevents the `X-Consumer-Groups` header to be sent in the request to the Upstream service.
   extra: |
-    Note that the `whitelist` and `blacklist` models are mutually exclusive in their usage, as they provide complimentary approaches. That is, you cannot configure an ACL with both `whitelist` and `blacklist` configurations. An ACL with a `whitelist` provides a positive security model, in which the configured groups are allowed access to the resources, and all others are inherently rejected. By contrast, a `blacklist` configuration provides a negative security model, in which certain groups are explicitly denied access to the resource (and all others are inherently allowed).
+    Note that the `allow` and `deny` models are mutually exclusive in their usage, as they provide complimentary approaches. That is, you cannot configure an ACL with both `allow` and `deny` configurations. An ACL with an `allow` provides a positive security model, in which the configured groups are allowed access to the resources, and all others are inherently rejected. By contrast, a `deny` configuration provides a negative security model, in which certain groups are explicitly denied access to the resource (and all others are inherently allowed).
 ---
 
 ### Usage
 
-In order to use this plugin, you need to properly have configured your Service or Route with an [authentication plugin][faq-authentication] so that the plugin can identify who is the client [Consumer][consumer-object] making the request.
+Before you use the ACL plugin, you need to have properly configured your Service or
+Route with an [authentication plugin](/hub/#authentication)
+so that the plugin can identify the client Consumer making the request.
 
 #### Associating Consumers
 
-{% tabs %}
-{% tab With a database %}
-Once you have added an authentication plugin to a Service or a Route and you have created your [Consumers][consumer-object], you can now associate a group to a [Consumer][consumer-object] using the following request:
+{% navtabs %}
+{% navtab With a database %}
+
+After you have added an authentication plugin to a Service or a Route, and you have
+created your [Consumers](/gateway-oss/latest/admin-api/#consumer-object), you can now
+associate a group to a Consumer using the following request:
 
 ```bash
 $ curl -X POST http://kong:8001/consumers/{consumer}/acls \
     --data "group=group1"
 ```
 
-`consumer`: The `id` or `username` property of the [Consumer][consumer-object] entity to associate the credentials to.
+`consumer`: The `id` or `username` property of the Consumer entity to associate the credentials to.
 
 form parameter        | default| description
 ---                   | ---    | ---
 `group`               |        | The arbitrary group name to associate to the consumer.
-
-{% tab Without a database %}
+{% endnavtab %}
+{% navtab Without a database %}
 You can create ACL objects via the `acls:` entry in the declarative configuration file:
 
 ``` yaml
@@ -118,17 +131,22 @@ acls:
   group: group1
 ```
 
-* `consumer`: The `id` or `username` property of the [Consumer][consumer-object] entity to associate the credentials to.
-* `group`: The arbitrary group name to associate to the consumer.
-{% endtabs %}
+* `consumer`: The `id` or `username` property of the Consumer entity to associate the credentials to.
+* `group`: The arbitrary group name to associate to the Consumer.
+{% endnavtab %}
+{% endnavtabs %}
 
-You can have more than one group associated to a consumer.
+You can have more than one group associated to a Consumer.
 
 #### Upstream Headers
 
-When a consumer has been validated, the plugin will append a `X-Consumer-Groups` header to the request before proxying it to the upstream service, so that you can identify the groups associated with the consumer. The value of the header is a comma separated list of groups that belong to the consumer, like `admin, pro_user`.
+When a consumer has been validated, the plugin appends a `X-Consumer-Groups`
+header to the request before proxying it to the Upstream service, so that you can
+identify the groups associated with the Consumer. The value of the header is a
+comma-separated list of groups that belong to the Consumer, like `admin, pro_user`.
 
-This header will not be injected in the request to the upstream service if the `hide_groups_header` config flag is set to `true`.
+This header will not be injected in the request to the Upstream service if
+the `hide_groups_header` config flag is set to `true`.
 
 #### Paginate through the ACLs
 
@@ -167,7 +185,7 @@ $ curl -X GET http://kong:8001/acls
 }
 ```
 
-You can filter the list by consumer by using this other path:
+You can filter the list by Consumer by using this other path:
 
 ```bash
 $ curl -X GET http://kong:8001/consumers/{username or id}/acls
@@ -185,7 +203,7 @@ $ curl -X GET http://kong:8001/consumers/{username or id}/acls
 }
 ```
 
-`username or id`: The username or id of the consumer whose ACLs need to be listed
+`username or id`: The username or id of the Consumer whose ACLs need to be listed
 
 #### Retrieve the Consumer associated with an ACL
 
@@ -193,7 +211,7 @@ $ curl -X GET http://kong:8001/consumers/{username or id}/acls
   <strong>Note:</strong> This endpoint was introduced in Kong 0.11.2.
 </div>
 
-It is possible to retrieve a [Consumer][consumer-object] associated with an ACL
+Retrieve a Consumer associated with an ACL
 using the following request:
 
 ```bash
@@ -207,9 +225,8 @@ curl -X GET http://kong:8001/acls/{id}/consumer
 ```
 
 `id`: The `id` property of the ACL for which to get the associated
-[Consumer][consumer-object].
+Consumer.
 
-[cidr]: https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing#CIDR_notation
-[configuration]: /latest/configuration
-[consumer-object]: /latest/admin-api/#consumer-object
-[faq-authentication]: /about/faq/#how-can-i-add-authentication-to-a-microservice-api
+#### See also
+- [cidr](https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing#CIDR_notation)
+- [configuration](/gateway-oss/latest/configuration)

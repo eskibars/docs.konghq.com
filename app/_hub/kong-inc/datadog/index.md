@@ -1,7 +1,8 @@
 ---
 name: Datadog
 publisher: Kong Inc.
-version: 3.0.0
+version: 3.0.x
+# internal handler version 3.0.1
 
 desc: Visualize metrics on Datadog
 description: |
@@ -17,12 +18,17 @@ description: |
   </div>
 
 type: plugin
+cloud: false
 categories:
   - analytics-monitoring
 
 kong_version_compatibility:
     community_edition:
       compatible:
+        - 2.4.x
+        - 2.3.x      
+        - 2.2.x
+        - 2.1.x
         - 2.0.x
         - 1.5.x      
         - 1.4.x
@@ -41,49 +47,51 @@ kong_version_compatibility:
         - 0.6.x
     enterprise_edition:
       compatible:
-        - 1.5.x
-        - 1.3-x
+        - 2.4.x
+        - 2.3.x
+        - 2.2.x
+        - 2.1.x
         - 0.36-x
-        - 0.35-x
-        - 0.34-x
-        - 0.33-x
-        - 0.32-x
-        - 0.31-x
 
 params:
   name: datadog
   service_id: true
   route_id: true
   consumer_id: true
-  protocols: ["http", "https"]
+  konnect_examples: false
+  protocols: ["http", "https", "tcp", "tls", "udp"]
   dbless_compatible: yes
   config:
     - name: host
-      required: false
-      default: "`127.0.0.1`"
+      required: true
+      default: "`localhost`"
       value_in_examples: 127.0.0.1
+      datatype: string
       description: The IP address or host name to send data to.
     - name: port
-      required: false
+      required: true
       default: "`8125`"
       value_in_examples: 8125
+      datatype: integer
       description: The port to send data to on the upstream server
     - name: metrics
-      required: false
+      required: true
       default: All metrics are logged
+      datatype: array of record elements
       description: |
         List of Metrics to be logged. Available values are described at [Metrics](#metrics).
     - name: prefix
-      required: false
+      required: true
       default: "`kong`"
+      datatype: string
       description: String to be attached as prefix to metric's name.
 
 ---
 
 ## Metrics
-Plugin currently logs the following metrics to the Datadog server about a Service or Route.
+The Datadog plugin currently logs the following metrics to the Datadog server about a Service or Route.
 
-Metric                     | description | namespace
+Metric                     | Description | Namespace
 ---                        | ---         | ---
 `request_count`            | tracks the request | kong.request.count
 `request_size`             | tracks the request's body size in bytes | kong.request.size
@@ -98,22 +106,22 @@ The metrics will be sent with the tags `name` and `status` carrying the API name
 
 Plugin can be configured with any combination of [Metrics](#metrics), with each entry containing the following fields.
 
-Field           | description                                           | allowed values
----             | ---                                                   | ---
-`name`          | Datadog metric's name                                 | [Metrics](#metrics)
-`stat_type`     | determines what sort of event the metric represents   | `gauge`, `timer`, `counter`, `histogram`, `meter` and `set`
-`sample_rate`<br>*conditional*   | sampling rate                        | `number`
-`customer_identifier`<br>*conditional*| authenticated user detail       | `consumer_id`, `custom_id`, `username`
-`tags`<br>*optional*| List of tags                                      | `key[:value]`
+Field           | Description                                           | Datatypes   | Allowed values
+---             | ---                                                   | ---         | ---
+`name`          | Datadog metric's name                                 | String      | [Metrics](#metrics)
+`stat_type`     | determines what sort of event the metric represents   | String      | `gauge`, `timer`, `counter`, `histogram`, `meter` and `set`
+`sample_rate`<br>*conditional*   | sampling rate                        | Number      | `number`
+`consumer_identifier`<br>*conditional*| authenticated user detail       | String      | `consumer_id`, `custom_id`, `username`
+`tags`<br>*optional*| List of tags                                      | Array of strings    | `key[:value]`
 
 ### Metric requirements
 
-1.  by default all metrics get logged.
-2.  metric with `stat_type` as `counter` or `gauge` must have `sample_rate` defined as well.
+1.  All metrics get logged by default.
+2.  Metrics with `stat_type` as `counter` or `gauge` must have `sample_rate` defined as well.
 
 ## Migrating Datadog queries
 The plugin updates replace the api, status, and consumer-specific metrics with a generic metric name.
-You have to change your Datadog queries in dashboards and alerts to reflect the metrics updates.
+You must change your Datadog queries in dashboards and alerts to reflect the metrics updates.
 
 For example, the following query:
 ```
@@ -127,7 +135,4 @@ avg:kong.latency.avg{name:sample-service}
 
 ## Kong Process Errors
 
-This logging plugin will only log HTTP request and response data. If you are
-looking for the Kong process error file (which is the nginx error file), then
-you can find it at the following path:
-{[prefix](/{{site.data.kong_latest.release}}/configuration/#prefix)}/logs/error.log
+{% include /md/plugins-hub/kong-process-errors.md %}

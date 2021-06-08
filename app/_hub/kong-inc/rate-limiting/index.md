@@ -3,19 +3,18 @@ name: Rate Limiting
 publisher: Kong Inc.
 redirect_from:
   - /enterprise/0.35-x/rate-limiting/
-version: 2.1.0
+version: 2.2.x
 
-desc: Rate-limit how many HTTP requests a developer can make
+desc: Rate-limit how many HTTP requests can be made in a period of time
 description: |
-  Rate limit how many HTTP requests a developer can make in a given period of seconds, minutes, hours, days, months or years. If the underlying Service/Route (or deprecated API entity) has no authentication layer, the **Client IP** address will be used, otherwise the Consumer will be used if an authentication plugin has been configured.
+  Rate limit how many HTTP requests can be made in a given period of seconds, minutes, hours, days, months, or years.
+  If the underlying Service/Route (or deprecated API entity) has no authentication layer,
+  the **Client IP** address will be used; otherwise, the Consumer will be used if an
+  authentication plugin has been configured.
 
-  <div class="alert alert-warning">
-    <strong>Note:</strong> The functionality of this plugin as bundled
-    with versions of Kong prior to 0.13.1 and Kong Enterprise prior to 0.32
-    differs from what is documented herein. Refer to the
-    <a href="https://github.com/Kong/kong/blob/master/CHANGELOG.md">CHANGELOG</a>
-    for details.
-  </div>
+  **Tip:** The [Rate Limiting Advanced](/hub/kong-inc/rate-limiting-advanced/)
+    plugin provides the ability to apply
+    [multiple limits in sliding or fixed windows](/hub/kong-inc/rate-limiting-advanced/#multi-limits-windows).
 
 type: plugin
 categories:
@@ -24,6 +23,10 @@ categories:
 kong_version_compatibility:
   community_edition:
     compatible:
+      - 2.4.x
+      - 2.3.x
+      - 2.2.x
+      - 2.1.x
       - 2.0.x
       - 1.4.x
       - 1.3.x
@@ -45,13 +48,13 @@ kong_version_compatibility:
       - 0.2.x
   enterprise_edition:
     compatible:
+      - 2.4.x
+      - 2.3.x
+      - 2.2.x
+      - 2.1.x
       - 1.5.x
       - 1.3-x
       - 0.36-x
-      - 0.35-x
-      - 0.34-x
-      - 0.33-x
-      - 0.32-x
 
 params:
   name: rate-limiting
@@ -70,71 +73,116 @@ params:
     - name: second
       required: semi
       value_in_examples: 5
-      description: The amount of HTTP requests the developer can make per second. At least one limit must exist.
+      datatype: number
+      description: The number of HTTP requests that can be made per second.
     - name: minute
       required: semi
-      description: The amount of HTTP requests the developer can make per minute. At least one limit must exist.
+      datatype: number
+      description: The number of HTTP requests that can be made per minute.
     - name: hour
       required: semi
       value_in_examples: 10000
-      description: The amount of HTTP requests the developer can make per hour. At least one limit must exist.
+      datatype: number
+      description: The number of HTTP requests that can be made per hour.
     - name: day
       required: semi
-      description: The amount of HTTP requests the developer can make per day. At least one limit must exist.
+      datatype: number
+      description: The number of HTTP requests that can be made per day.
     - name: month
       required: semi
-      description: The amount of HTTP requests the developer can make per month. At least one limit must exist.
+      datatype: number
+      description: The number of HTTP requests that can be made per month.
     - name: year
       required: semi
-      description: The amount of HTTP requests the developer can make per year. At least one limit must exist.
+      datatype: number
+      description: The number of HTTP requests that can be made per year.
     - name: limit_by
       required: false
       default: '`consumer`'
+      datatype: string
       description: |
-        The entity that will be used when aggregating the limits: `consumer`, `credential`, `ip`, `service`. If the `consumer`, the `credential` or the `service` cannot be determined, the system will always fallback to `ip`.
+        The entity that will be used when aggregating the limits: `consumer`, `credential`, `ip`, `service`, `header`, `path`. If the value for the entity chosen to aggregate the limit cannot be determined, the system will always fallback to `ip`. If value `service` is chosen, the `service_id` configuration must be provided. If value `header` is chosen, the `header_name` configuration must be provided. If value `path` is chosen, the `path` configuration must be provided.
+    - name: service_id
+      required: semi
+      datatype: string
+      description: The service id to be used if `limit_by` is set to `service`.
+    - name: header_name
+      required: semi
+      datatype: string
+      description: Header name to be used if `limit_by` is set to `header`.
+    - name: path
+      required: semi
+      datatype: string
+      description: Path to be used if `limit_by` is set to `path`.
     - name: policy
       required: false
       value_in_examples: "local"
       default: '`cluster`'
+      datatype: string
       description: |
-        The rate-limiting policies to use for retrieving and incrementing the limits. Available values are `local` (counters will be stored locally in-memory on the node), `cluster` (counters are stored in the datastore and shared across the nodes) and `redis` (counters are stored on a Redis server and will be shared across the nodes). In case of DB-less mode, at least one of `local` or `redis` must be specified. Please refer <a href="https://docs.konghq.com/hub/kong-inc/rate-limiting/#implementation-considerations">Implementation Considerations</a> for details on which policy should be used.
+        The rate-limiting policies to use for retrieving and incrementing the
+        limits. Available values are:
+        - `local`: Counters are stored locally in-memory on the node.
+        - `cluster`: Counters are stored in the datastore and shared across the
+        nodes.
+        - `redis`: Counters are stored on a Redis server and shared
+        across the nodes.
+
+        In the case of DB-less mode, at least one of `local` or `redis` must be
+        specified. For hybrid mode, only `redis` is supported.
+        For details on which policy should be used, refer to the
+        <a href="https://docs.konghq.com/hub/kong-inc/rate-limiting/#implementation-considerations">Implementation Considerations</a>.
     - name: fault_tolerant
       required: false
       default: '`true`'
+      datatype: boolean
       description: |
-        A boolean value that determines if the requests should be proxied even if Kong has troubles connecting a third-party datastore. If `true` requests will be proxied anyways effectively disabling the rate-limiting function until the datastore is working again. If `false` then the clients will see `500` errors.
+        A boolean value that determines if the requests should be proxied even if Kong has troubles connecting a third-party datastore. If `true`, requests will be proxied anyway, effectively disabling the rate-limiting function until the datastore is working again. If `false`, then the clients will see `500` errors.
     - name: hide_client_headers
       required: false
       default: '`false`'
+      datatype: boolean
       description: Optionally hide informative response headers.
     - name: redis_host
       required: semi
+      datatype: string
       description: |
         When using the `redis` policy, this property specifies the address to the Redis server.
     - name: redis_port
       required: false
       default: '`6379`'
+      datatype: integer
       description: |
         When using the `redis` policy, this property specifies the port of the Redis server. By default is `6379`.
     - name: redis_password
       required: false
+      datatype: string
       description: |
         When using the `redis` policy, this property specifies the password to connect to the Redis server.
     - name: redis_timeout
       required: false
       default: '`2000`'
+      datatype: number
       description: |
         When using the `redis` policy, this property specifies the timeout in milliseconds of any command submitted to the Redis server.
     - name: redis_database
       required: false
       default: '`0`'
+      datatype: integer
       description: |
-        When using the `redis` policy, this property specifies Redis database to use.
+        When using the `redis` policy, this property specifies the Redis database to use.
+  extra:
+    <div class="alert alert-warning">
+        <strong>Note:</strong> At least one limit (`second`, `minute`, `hour`, `day`, `month`, `year`) must be configured. Multiple limits can be configured.
+    </div>
+
 ---
 
 ## Headers sent to the client
 
-When this plugin is enabled, Kong will send some additional headers back to the client telling what are the limits allowed, how many requests are available and how long it will take until the quota will be restored, for example:
+When this plugin is enabled, Kong sends some additional headers back to the client
+indicating the allowed limits, how many requests remain available,
+and the time remaining until the quota is reset (number of seconds). For example:
 
 ```
 RateLimit-Limit: 6
@@ -142,14 +190,14 @@ RateLimit-Remaining: 4
 RateLimit-Reset: 47
 ```
 
-The plugin will also send headers telling the limits in the time frame and the number of requests remaining:
+The plugin also sends headers that indicate the limits in the time frame and the number of minutes remaining:
 
 ```
 X-RateLimit-Limit-Minute: 10
 X-RateLimit-Remaining-Minute: 9
 ```
 
-or it will return a combination of more time limits, if more than one is being set:
+Or, it returns a combination of more time limits, if more than one is being set:
 
 ```
 X-RateLimit-Limit-Second: 5
@@ -158,7 +206,7 @@ X-RateLimit-Limit-Minute: 10
 X-RateLimit-Remaining-Minute: 9
 ```
 
-If any of the limits configured is being reached, the plugin will return a `HTTP/1.1 429` status code to the client with the following JSON body:
+If any of the limits configured is being reached, the plugin returns a `HTTP/1.1 429` status code to the client with the following JSON body:
 
 ```json
 { "message": "API rate limit exceeded" }
@@ -172,7 +220,7 @@ The headers `RateLimit-Limit`, `RateLimit-Remaining` and `RateLimit-Reset` are b
 
 ## Implementation considerations
 
-The plugin supports 3 policies, which each have their specific pros and cons.
+The plugin supports three policies, which each have their specific pros and cons.
 
 | policy    | pros                                                        | cons                                                                                                                                |
 | --------- | ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
@@ -180,7 +228,7 @@ The plugin supports 3 policies, which each have their specific pros and cons.
 | `redis`   | accurate, lesser performance impact than a `cluster` policy | extra redis installation required, bigger performance impact than a `local` policy                                                  |
 | `local`   | minimal performance impact                                  | less accurate, and unless a consistent-hashing load balancer is used in front of Kong, it diverges when scaling the number of nodes |
 
-There are 2 use cases that are most common:
+There are two use cases that are most common:
 
 1. _every transaction counts_. These are for example transactions with financial
    consequences. Here the highest level of accuracy is required.
@@ -211,7 +259,7 @@ your switch more carefully.
 
 ### Backend protection
 
-As accuracy is of lesser importance, the `local` policy can be used. It might require some experimenting
+If accuracy is of lesser importance, the `local` policy can be used. It might require some experimenting
 to get the proper setting. For example, if the user is bound to 100 requests per second, and you have an
 equally balanced 5 node Kong cluster, setting the `local` limit to something like 30 requests per second
 should work. If you are worried about too many false-negatives, increase the value.
@@ -220,14 +268,20 @@ Keep in mind as the cluster scales to more nodes, the users will get more reques
 when the cluster scales down the probability of false-negatives increases. So in general, update your
 limits when scaling.
 
-The above mentioned inaccuracy can be mitigated by using a consistent-hashing load balancer in front of
-Kong, that ensures the same user is always directed to the same Kong node. This will both reduce the
+The above-mentioned inaccuracy can be mitigated by using a consistent-hashing load balancer in front of
+Kong, which ensures the same user is always directed to the same Kong node. This will both reduce the
 inaccuracy and prevent the scaling issues.
 
 Most likely the user will be granted more than was agreed when using the `local` policy, but it will
 effectively block any attacks while maintaining the best performance.
 
-[api-object]: /latest/admin-api/#api-object
-[configuration]: /latest/configuration
-[consumer-object]: /latest/admin-api/#consumer-object
+### Fallback to IP
+
+When the selected policy cannot be retrieved, the rate-limiting plugin will fallback
+to limit using IP as the identifier. This can happen for several reasons, such as the
+selected header was not sent by the client or the configured service was not found.
+
+[api-object]: /gateway-oss/latest/admin-api/#api-object
+[configuration]: /gateway-oss/latest/configuration
+[consumer-object]: /gateway-oss/latest/admin-api/#consumer-object
 [faq-authentication]: /about/faq/#how-can-i-add-an-authentication-layer-on-a-microservice/api?
